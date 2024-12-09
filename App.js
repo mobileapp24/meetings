@@ -29,6 +29,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import HomeScreen from './src/screens/HomeScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import CreateMeetingScreen from './src/screens/CreateMeetingScreen';
+import MyMeetingsScreen from './src/screens/MyMeetingsScreen';
+import MeetingsMapScreen from './src/screens/MeetingsMapScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -46,6 +48,10 @@ const App = () => {
               iconName = focused ? 'person' : 'person-outline';
             } else if (route.name === 'Create') {
               iconName = focused ? 'add-circle' : 'add-circle-outline';
+            } else if (route.name === 'MyMeetings') {
+              iconName = focused ? 'calendar' : 'calendar-outline';
+            } else if (route.name === 'MeetingsMap') {
+              iconName = focused ? 'map' : 'map-outline';
             }
 
             return <Icon name={iconName} size={size} color={color} />;
@@ -55,9 +61,12 @@ const App = () => {
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Create" component={CreateMeetingScreen} />
         <Tab.Screen name="Profile" component={ProfileScreen} />
+        <Tab.Screen name="MyMeetings" component={MyMeetingsScreen} />
+        <Tab.Screen name="MeetingsMap" component={MeetingsMapScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
 };
 
 export default App;
+
