@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import {updateProfile,  createUserWithEmailAndPassword } from 'firebase/auth';
+import { updateProfile, createUserWithEmailAndPassword } from 'firebase/auth';
 import { setDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../services/config';
 import CustomAlert from '../components/CustomAlert';
@@ -31,6 +31,23 @@ const RegisterScreen = ({ navigation }) => {
       updateProfile(auth.currentUser, {
         displayName: name
       })
+      const user = userCredential.user;
+      console.log('User created successfully:', user.uid);
+
+      console.log('Attempting to create user profile...');
+      const userDocRef = doc(db, 'users', user.uid);
+      console.log('User document reference created:', userDocRef);
+      
+      const userData = {
+        name: name,
+        email: email,
+        interests: [],
+        eventsAttended: [],
+      };
+      console.log('User data prepared:', userData);
+
+      await setDoc(userDocRef, userData);
+      console.log('User profile created successfully');
 
       showAlert('Registration Successful', 'You can now login with your new account.');
     } catch (error) {
@@ -129,4 +146,5 @@ const styles = StyleSheet.create({
 });
 
 export default RegisterScreen;
+
 

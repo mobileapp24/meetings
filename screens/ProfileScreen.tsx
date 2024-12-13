@@ -1,24 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { signOut, deleteUser } from 'firebase/auth';
-import { doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../services/config';
 import CustomAlert from '../components/CustomAlertWithOptions';
+import EditInterestsModal from '../components/EditInterestsModal';
 
 const ProfileScreen = ({ navigation }) => {
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [userInterests, setUserInterests] = useState<string[]>([]);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
   const [isConfirmDelete, setIsConfirmDelete] = useState(false);
+  const [isEditInterestsVisible, setIsEditInterestsVisible] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
       const user = auth.currentUser;
       if (user) {
         setUserEmail(user.email || '');
-        setUserName(user.displayName || '');
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserName(userData.name || '');
+          setUserInterests(userData.interests || []);
+        }
       }
     };
     fetchUserData();
@@ -49,14 +57,9 @@ const ProfileScreen = ({ navigation }) => {
     try {
       const user = auth.currentUser;
       if (user) {
-     
-        console.log('Attempting to delete user account...');
+        await deleteDoc(doc(db, 'users', user.uid));
         await deleteUser(user);
-        console.log('User account deleted successfully');
-        
         navigation.replace('Login');
-      } else {
-        console.log('No current user found');
       }
     } catch (error) {
       console.error('Delete user error:', error);
@@ -71,8 +74,18 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  const handleAlertCancel = () => {
-    setAlertVisible(false);
+  const handleUpdateInterests = async (newInterests: string[]) => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        await updateDoc(doc(db, 'users', user.uid), { interests: newInterests });
+        setUserInterests(newInterests);
+        setIsEditInterestsVisible(false);
+      }
+    } catch (error) {
+      console.error('Update interests error:', error);
+      showAlert('Error', 'Failed to update interests. Please try again.');
+    }
   };
 
   return (
@@ -80,6 +93,19 @@ const ProfileScreen = ({ navigation }) => {
       <Text style={styles.title}>Profile</Text>
       <Text style={styles.info}>Name: {userName}</Text>
       <Text style={styles.info}>Email: {userEmail}</Text>
+      
+      <Text style={styles.sectionTitle}>Interests</Text>
+      <FlatList
+        data={userInterests}
+        renderItem={({ item }) => <Text style={styles.interestItem}>{item}</Text>}
+        keyExtractor={(item, index) => index.toString()}
+        style={styles.interestsList}
+        ListEmptyComponent={<Text style={styles.emptyInterests}>No interests added yet</Text>}
+      />
+      
+      <TouchableOpacity style={styles.button} onPress={() => setIsEditInterestsVisible(true)}>
+        <Text style={styles.buttonText}>Edit Interests</Text>
+      </TouchableOpacity>
       
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Log Out</Text>
@@ -94,8 +120,15 @@ const ProfileScreen = ({ navigation }) => {
         title={alertTitle}
         message={alertMessage}
         onConfirm={handleAlertConfirm}
-        onCancel={handleAlertCancel}
+        onCancel={() => setAlertVisible(false)}
         showCancelButton={isConfirmDelete}
+      />
+
+      <EditInterestsModal
+        visible={isEditInterestsVisible}
+        interests={userInterests}
+        onSave={handleUpdateInterests}
+        onCancel={() => setIsEditInterestsVisible(false)}
       />
     </View>
   );
@@ -104,8 +137,6 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
   },
   title: {
@@ -117,13 +148,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 10,
   },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  interestsList: {
+    maxHeight: 100,
+    marginBottom: 20,
+  },
+  interestItem: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  emptyInterests: {
+    fontSize: 16,
+    fontStyle: 'italic',
+    color: '#666',
+  },
   button: {
     backgroundColor: '#007AFF',
     padding: 10,
     borderRadius: 5,
-    width: '100%',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
   },
   deleteButton: {
     backgroundColor: '#FF3B30',
@@ -136,4 +185,7 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
+
+
+
 
