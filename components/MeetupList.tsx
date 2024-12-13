@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Meetup } from '../types/meetup';
 import { auth, db } from '../services/config';
-import { updateDoc, doc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { updateDoc, doc, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
 
 interface MeetupListProps {
   meetups: Meetup[];
@@ -44,10 +44,20 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress }) => {
     }
   };
 
+  const handleDeleteMeetup = async (meetupId: string) => {
+    try {
+      await deleteDoc(doc(db, 'meetups', meetupId));
+      console.log('Meetup deleted successfully');
+    } catch (error) {
+      console.error('Error deleting meetup:', error);
+    }
+  };
+
   const renderMeetupItem = ({ item }: { item: Meetup }) => {
     const user = auth.currentUser;
     const isUserInMeetup = user && item.participants && item.participants.includes(user.uid);
     const isMeetupFull = item.participants && item.participants.length >= item.maxParticipants;
+    const isCreator = user && user.uid === item.creatorId;
 
     return (
       <TouchableOpacity style={styles.meetupItem} onPress={() => onMeetupPress(item)}>
@@ -61,18 +71,28 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress }) => {
           </Text>
           <Text style={styles.meetupCreator}>Created by: {item.creatorName}</Text>
         </View>
-        <TouchableOpacity
-          style={[
-            styles.joinButton,
-            isUserInMeetup ? styles.leaveButton : (isMeetupFull ? styles.disabledButton : null)
-          ]}
-          onPress={() => handleJoinMeetup(item)}
-          disabled={isMeetupFull && !isUserInMeetup}
-        >
-          <Text style={styles.joinButtonText}>
-            {isUserInMeetup ? 'Leave' : (isMeetupFull ? 'Full' : 'Join')}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.joinButton,
+              isUserInMeetup ? styles.leaveButton : (isMeetupFull ? styles.disabledButton : null)
+            ]}
+            onPress={() => handleJoinMeetup(item)}
+            disabled={isMeetupFull && !isUserInMeetup}
+          >
+            <Text style={styles.joinButtonText}>
+              {isUserInMeetup ? 'Leave' : (isMeetupFull ? 'Full' : 'Join')}
+            </Text>
+          </TouchableOpacity>
+          {isCreator && (
+            <TouchableOpacity
+              style={[styles.deleteButton]}
+              onPress={() => handleDeleteMeetup(item.id)}
+            >
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };
@@ -121,11 +141,17 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 5,
   },
+  buttonContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   joinButton: {
     backgroundColor: '#007AFF',
     padding: 10,
     borderRadius: 5,
     marginLeft: 10,
+    marginBottom: 5,
   },
   leaveButton: {
     backgroundColor: '#FF3B30',
@@ -133,7 +159,17 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: '#999',
   },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+    padding: 10,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
   joinButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  deleteButtonText: {
     color: 'white',
     fontWeight: 'bold',
   },
