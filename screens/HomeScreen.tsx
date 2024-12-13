@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Button, Text, Platform } from 'react-native';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { View, StyleSheet, Button, Text, Platform, ScrollView } from 'react-native';
+import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../services/config';
 import MeetupList from '../components/MeetupList';
 import CreateMeetupForm from '../components/CreateMeetupForm';
@@ -10,32 +10,59 @@ import { Picker } from '@react-native-picker/picker';
 const categories = ['All', 'Sports', 'Study', 'Social', 'Work', 'Other'];
 
 const HomeScreen: React.FC = () => {
-  const [meetups, setMeetups] = useState<Meetup[]>([]);
-  const [filteredMeetups, setFilteredMeetups] = useState<Meetup[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [activeMeetups, setActiveMeetups] = useState<Meetup[]>([]);
+  const [finishedMeetups, setFinishedMeetups] = useState<Meetup[]>([]);
+  const [filteredActiveMeetups, setFilteredActiveMeetups] = useState<Meetup[]>([]);
+  const [filteredFinishedMeetups, setFilteredFinishedMeetups] = useState<Meetup[]>([]);
+  const[showCreateForm, setShowCreateForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   useEffect(() => {
-    const q = query(collection(db, 'meetups'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const now = new Date();
+    const activeMeetupsQuery = query(
+      collection(db, 'meetups'),
+      where('date', '>', now.toISOString()),
+      orderBy('date', 'asc')
+    );
+    const finishedMeetupsQuery = query(
+      collection(db, 'meetups'),
+      where('date', '<=', now.toISOString()),
+      orderBy('date', 'desc')
+    );
+
+    const unsubscribeActive = onSnapshot(activeMeetupsQuery, (querySnapshot) => {
       const meetupsData: Meetup[] = [];
       querySnapshot.forEach((doc) => {
         meetupsData.push({ id: doc.id, ...doc.data() } as Meetup);
       });
-      setMeetups(meetupsData);
-      setFilteredMeetups(meetupsData);
+      setActiveMeetups(meetupsData);
+      setFilteredActiveMeetups(meetupsData);
     });
 
-    return () => unsubscribe();
+    const unsubscribeFinished = onSnapshot(finishedMeetupsQuery, (querySnapshot) => {
+      const meetupsData: Meetup[] = [];
+      querySnapshot.forEach((doc) => {
+        meetupsData.push({ id: doc.id, ...doc.data() } as Meetup);
+      });
+      setFinishedMeetups(meetupsData);
+      setFilteredFinishedMeetups(meetupsData);
+    });
+
+    return () => {
+      unsubscribeActive();
+      unsubscribeFinished();
+    };
   }, []);
 
   useEffect(() => {
     if (selectedCategory === 'All') {
-      setFilteredMeetups(meetups);
+      setFilteredActiveMeetups(activeMeetups);
+      setFilteredFinishedMeetups(finishedMeetups);
     } else {
-      setFilteredMeetups(meetups.filter(meetup => meetup.category === selectedCategory));
+      setFilteredActiveMeetups(activeMeetups.filter(meetup => meetup.category === selectedCategory));
+      setFilteredFinishedMeetups(finishedMeetups.filter(meetup => meetup.category === selectedCategory));
     }
-  }, [selectedCategory, meetups]);
+  }, [selectedCategory, activeMeetups, finishedMeetups]);
 
   const handleMeetupPress = (meetup: Meetup) => {
     // TODO: Implement navigation to meetup details screen
@@ -71,14 +98,25 @@ const HomeScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       {showCreateForm ? (
         <CreateMeetupForm />
       ) : (
         <>
           <Text style={styles.filterLabel}>Filter by Category:</Text>
           {renderCategoryPicker()}
-          <MeetupList meetups={filteredMeetups} onMeetupPress={handleMeetupPress} />
+          <Text style={styles.sectionTitle}>Active Meetups</Text>
+          <MeetupList
+            meetups={filteredActiveMeetups}
+            onMeetupPress={handleMeetupPress}
+            isFinishedList={false}
+          />
+          <Text style={styles.sectionTitle}>Finished Meetups</Text>
+          <MeetupList
+            meetups={filteredFinishedMeetups}
+            onMeetupPress={handleMeetupPress}
+            isFinishedList={true}
+          />
           <Button
             title="Create New Meetup"
             onPress={() => setShowCreateForm(true)}
@@ -91,7 +129,7 @@ const HomeScreen: React.FC = () => {
           onPress={() => setShowCreateForm(false)}
         />
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -104,6 +142,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
   },
   picker: {
     borderWidth: 1,
@@ -122,4 +166,5 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+
 

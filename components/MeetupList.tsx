@@ -1,19 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Meetup } from '../types/meetup';
 import { auth, db } from '../services/config';
 import { updateDoc, doc, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
+import RateMeetupModal from './RateMeetupModal';
 
 interface MeetupListProps {
   meetups: Meetup[];
   onMeetupPress: (meetup: Meetup) => void;
+  isFinishedList: boolean;
 }
 
-const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress }) => {
+const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinishedList }) => {
+  const [selectedMeetup, setSelectedMeetup] = useState<Meetup | null>(null);
+  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+
   const handleJoinMeetup = async (meetup: Meetup) => {
     const user = auth.currentUser;
-    if (!user) {
-      console.error('No user logged in');
+    if (!user || meetup.isFinished) {
       return;
     }
 
@@ -53,11 +57,41 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress }) => {
     }
   };
 
+  const handleRateMeetup = (meetup: Meetup) => {
+    setSelectedMeetup(meetup);
+    setIsRatingModalVisible(true);
+  };
+
+  const handleRatingSubmit = async (rating: number) => {
+    if (selectedMeetup && auth.currentUser) {
+      try {
+        const meetupRef = doc(db, 'meetups', selectedMeetup.id);
+        const updatedRatings = {
+          ...selectedMeetup.ratings,
+          [auth.currentUser.uid]: rating
+        };
+        const ratingValues = Object.values(updatedRatings);
+        const averageRating = ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length;
+
+        await updateDoc(meetupRef, {
+          ratings: updatedRatings,
+          averageRating: averageRating
+        });
+
+        console.log('Rating submitted successfully');
+      } catch (error) {
+        console.error('Error submitting rating:', error);
+      }
+    }
+    setIsRatingModalVisible(false);
+  };
+
   const renderMeetupItem = ({ item }: { item: Meetup }) => {
     const user = auth.currentUser;
     const isUserInMeetup = user && item.participants && item.participants.includes(user.uid);
     const isMeetupFull = item.participants && item.participants.length >= item.maxParticipants;
     const isCreator = user && user.uid === item.creatorId;
+    const canRate = isFinishedList && isUserInMeetup && (!item.ratings || !item.ratings[user!.uid]);
 
     return (
       <TouchableOpacity style={styles.meetupItem} onPress={() => onMeetupPress(item)}>
@@ -70,26 +104,41 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress }) => {
             Participants: {item.participants ? item.participants.length : 0}/{item.maxParticipants}
           </Text>
           <Text style={styles.meetupCreator}>Created by: {item.creatorName}</Text>
+          {isFinishedList && (
+            <Text style={styles.meetupRating}>
+              Average Rating: {item.averageRating ? item.averageRating.toFixed(1) : 'Not rated'}
+            </Text>
+          )}
         </View>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.joinButton,
-              isUserInMeetup ? styles.leaveButton : (isMeetupFull ? styles.disabledButton : null)
-            ]}
-            onPress={() => handleJoinMeetup(item)}
-            disabled={isMeetupFull && !isUserInMeetup}
-          >
-            <Text style={styles.joinButtonText}>
-              {isUserInMeetup ? 'Leave' : (isMeetupFull ? 'Full' : 'Join')}
-            </Text>
-          </TouchableOpacity>
-          {isCreator && (
+          {!isFinishedList && (
+            <TouchableOpacity
+              style={[
+                styles.joinButton,
+                isUserInMeetup ? styles.leaveButton : (isMeetupFull ? styles.disabledButton : null)
+              ]}
+              onPress={() => handleJoinMeetup(item)}
+              disabled={isMeetupFull && !isUserInMeetup}
+            >
+              <Text style={styles.joinButtonText}>
+                {isUserInMeetup ? 'Leave' : (isMeetupFull ? 'Full' : 'Join')}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {isCreator && !isFinishedList && (
             <TouchableOpacity
               style={[styles.deleteButton]}
               onPress={() => handleDeleteMeetup(item.id)}
             >
               <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          )}
+          {canRate && (
+            <TouchableOpacity
+              style={[styles.rateButton]}
+              onPress={() => handleRateMeetup(item)}
+            >
+              <Text style={styles.rateButtonText}>Rate</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -98,12 +147,19 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress }) => {
   };
 
   return (
-    <FlatList
-      data={meetups}
-      renderItem={renderMeetupItem}
-      keyExtractor={(item) => item.id}
-      style={styles.list}
-    />
+    <>
+      <FlatList
+        data={meetups}
+        renderItem={renderMeetupItem}
+        keyExtractor={(item) => item.id}
+        style={styles.list}
+      />
+      <RateMeetupModal
+        visible={isRatingModalVisible}
+        onClose={() => setIsRatingModalVisible(false)}
+        onSubmit={handleRatingSubmit}
+      />
+    </>
   );
 };
 
@@ -141,6 +197,11 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 5,
   },
+  meetupRating: {
+    fontSize: 14,
+    color: '#007AFF',
+    marginTop: 5,
+  },
   buttonContainer: {
     flexDirection: 'column',
     justifyContent: 'center',
@@ -165,11 +226,21 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginLeft: 10,
   },
+  rateButton: {
+    backgroundColor: '#4CD964',
+    padding: 10,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
   joinButtonText: {
     color: 'white',
     fontWeight: 'bold',
   },
   deleteButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  rateButtonText: {
     color: 'white',
     fontWeight: 'bold',
   },

@@ -9,4 +9,8 @@ export interface Meetup {
   creatorId: string;
   creatorName: string;
   category: string;
+  isFinished: boolean;
+  ratings: { [userId: string]: number };
+  averageRating: number;
 }
+
