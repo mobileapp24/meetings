@@ -42,8 +42,8 @@ const CreateMeetupForm: React.FC = () => {
       showAlert('Please select a future date and time');
       return false;
     }
-    if (!maxParticipants || parseInt(maxParticipants) <= 0) {
-      showAlert('Please enter a valid number of maximum participants');
+    if (!maxParticipants || !Number.isInteger(Number(maxParticipants)) || Number(maxParticipants) <= 0) {
+      showAlert('Please enter a valid positive integer for max participants');
       return false;
     }
     return true;
@@ -72,6 +72,9 @@ const CreateMeetupForm: React.FC = () => {
         creatorName: user.displayName || 'Anonymous',
         category,
         createdAt: new Date(),
+        isFinished: false,
+        ratings: {},
+        averageRating: 0,
       };
 
       await addDoc(collection(db, 'meetups'), meetupData);
@@ -207,7 +210,14 @@ const CreateMeetupForm: React.FC = () => {
         style={styles.input}
         placeholder="Max Participants"
         value={maxParticipants}
-        onChangeText={setMaxParticipants}
+        onChangeText={(text) => {
+          const integer = parseInt(text);
+          if (!isNaN(integer) && integer > 0) {
+            setMaxParticipants(integer.toString());
+          } else if (text === '') {
+            setMaxParticipants('');
+          }
+        }}
         keyboardType="numeric"
       />
       {renderCategoryPicker()}
@@ -280,4 +290,5 @@ const styles = StyleSheet.create({
 });
 
 export default CreateMeetupForm;
+
 
