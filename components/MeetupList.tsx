@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Meetup } from '../types/meetup';
 import { auth, db } from '../services/config';
-import { updateDoc, doc, arrayUnion, arrayRemove, deleteDoc, getDoc } from 'firebase/firestore';
+import { updateDoc, doc, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
 import RateMeetupModal from './RateMeetupModal';
 
 interface MeetupListProps {
@@ -97,17 +97,23 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
 
   const renderMeetupItem = ({ item }: { item: Meetup }) => {
     const user = auth.currentUser;
-    const isUserInMeetup = user && item.participants && item.participants.includes(user.uid);
+    const isUserInMeetup = user && item.participants?.includes(user.uid);
     const isMeetupFull = item.participants && item.participants.length >= item.maxParticipants;
     const isCreator = user && user.uid === item.creatorId;
     const canRate = isFinishedList && isUserInMeetup && (!item.ratings || !item.ratings[user!.uid]);
+    const userRating = user && item.ratings ? item.ratings[user.uid] : null;
+
+    const meetupDate = new Date(item.date);
+    const formattedTime = meetupDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     return (
       <TouchableOpacity style={styles.meetupItem} onPress={() => onMeetupPress(item)}>
         <View style={styles.meetupInfo}>
           <Text style={styles.meetupTitle}>{item.title}</Text>
           <Text style={styles.meetupCategory}>Category: {item.category}</Text>
-          <Text style={styles.meetupDetails}>{new Date(item.date).toLocaleDateString()}</Text>
+          <Text style={styles.meetupDetails}>
+            {meetupDate.toLocaleDateString()} at {formattedTime}
+          </Text>
           <Text style={styles.meetupDetails}>{item.location}</Text>
           <Text style={styles.meetupDetails}>
             Participants: {item.participants ? item.participants.length : 0}/{item.maxParticipants}
@@ -117,6 +123,9 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
             <Text style={styles.meetupRating}>
               Average Rating: {item.averageRating ? item.averageRating.toFixed(1) : 'Not rated'}
             </Text>
+          )}
+          {isUserInMeetup && userRating !== null && (
+            <Text style={styles.userRating}>Your Rating: {userRating}</Text>
           )}
         </View>
         <View style={styles.buttonContainer}>
@@ -200,6 +209,7 @@ const styles = StyleSheet.create({
   meetupDetails: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 2,
   },
   meetupCreator: {
     fontSize: 12,
@@ -210,6 +220,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
     marginTop: 5,
+  },
+  userRating: {
+    fontSize: 14,
+    color: '#4CD964',
+    marginTop: 2,
   },
   buttonContainer: {
     flexDirection: 'column',
@@ -256,5 +271,6 @@ const styles = StyleSheet.create({
 });
 
 export default MeetupList;
+
 
 
