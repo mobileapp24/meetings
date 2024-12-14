@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Meetup } from '../types/meetup';
 import { auth, db } from '../services/config';
-import { updateDoc, doc, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
+import { updateDoc, doc, arrayUnion, arrayRemove, deleteDoc, getDoc } from 'firebase/firestore';
 import RateMeetupModal from './RateMeetupModal';
 
 interface MeetupListProps {
@@ -25,10 +25,16 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
       meetup.participants = [];
     }
 
+    const userRef = doc(db, 'users', user.uid);
+    const meetupRef = doc(db, 'meetups', meetup.id);
+
     if (meetup.participants.includes(user.uid)) {
       try {
-        await updateDoc(doc(db, 'meetups', meetup.id), {
+        await updateDoc(meetupRef, {
           participants: arrayRemove(user.uid)
+        });
+        await updateDoc(userRef, {
+          eventsAttended: arrayRemove(meetup.id)
         });
         console.log('Left meetup successfully');
       } catch (error) {
@@ -36,8 +42,11 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
       }
     } else if (meetup.participants.length < meetup.maxParticipants) {
       try {
-        await updateDoc(doc(db, 'meetups', meetup.id), {
+        await updateDoc(meetupRef, {
           participants: arrayUnion(user.uid)
+        });
+        await updateDoc(userRef, {
+          eventsAttended: arrayUnion(meetup.id)
         });
         console.log('Joined meetup successfully');
       } catch (error) {
@@ -247,4 +256,5 @@ const styles = StyleSheet.create({
 });
 
 export default MeetupList;
+
 

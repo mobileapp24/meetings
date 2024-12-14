@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { signOut, deleteUser } from 'firebase/auth';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../services/config';
 import CustomAlert from '../components/CustomAlertWithOptions';
 import EditInterestsModal from '../components/EditInterestsModal';
+import { Meetup } from '../types/meetup';
 
 const ProfileScreen = ({ navigation }) => {
   const [userName, setUserName] = useState('');
@@ -15,22 +17,44 @@ const ProfileScreen = ({ navigation }) => {
   const [alertMessage, setAlertMessage] = useState('');
   const [isConfirmDelete, setIsConfirmDelete] = useState(false);
   const [isEditInterestsVisible, setIsEditInterestsVisible] = useState(false);
+  const [attendedMeetups, setAttendedMeetups] = useState<Meetup[]>([]);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        setUserEmail(user.email || '');
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUserName(userData.name || '');
-          setUserInterests(userData.interests || []);
-        }
+  const fetchUserData = useCallback(async () => {
+    const user = auth.currentUser;
+    if (user) {
+      setUserEmail(user.email || '');
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setUserName(userData.name || '');
+        setUserInterests(userData.interests || []);
+        await fetchAttendedMeetups(user.uid, userData.eventsAttended || []);
       }
-    };
-    fetchUserData();
+    }
   }, []);
+
+  const fetchAttendedMeetups = async (userId: string, eventsAttended: string[]) => {
+    const meetupsPromises = eventsAttended.map(meetupId => 
+      getDoc(doc(db, 'meetups', meetupId))
+    );
+    
+    const meetupDocs = await Promise.all(meetupsPromises);
+    const meetups: Meetup[] = meetupDocs
+      .filter(doc => doc.exists())
+      .map(doc => {
+        const data = doc.data() as Meetup;
+        return { ...data, id: doc.id };
+      });
+    
+    console.log('Fetched attended meetups:', meetups);
+    setAttendedMeetups(meetups);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [fetchUserData])
+  );
 
   const showAlert = (title: string, message: string, isDelete = false) => {
     setAlertTitle(title);
@@ -88,8 +112,19 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
+
+
+  const renderAttendedMeetup = ({ item }: { item: Meetup }) => (
+    <View style={styles.meetupItem}>
+      <Text style={styles.meetupTitle}>{item.title}</Text>
+      <Text style={styles.meetupDetails}>{new Date(item.date).toLocaleDateString()}</Text>
+      <Text style={styles.meetupDetails}>{item.location}</Text>
+      <Text style={styles.meetupCategory}>Category: {item.category}</Text>
+    </View>
+  );
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>Profile</Text>
       <Text style={styles.info}>Name: {userName}</Text>
       <Text style={styles.info}>Email: {userEmail}</Text>
@@ -106,6 +141,18 @@ const ProfileScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.button} onPress={() => setIsEditInterestsVisible(true)}>
         <Text style={styles.buttonText}>Edit Interests</Text>
       </TouchableOpacity>
+      
+      <Text style={styles.sectionTitle}>Attended Meetups</Text>
+      {attendedMeetups.length > 0 ? (
+        <FlatList
+          data={attendedMeetups}
+          renderItem={renderAttendedMeetup}
+          keyExtractor={(item) => item.id}
+          style={styles.meetupsList}
+        />
+      ) : (
+        <Text style={styles.emptyMeetups}>No attended meetups yet</Text>
+      )}
       
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Log Out</Text>
@@ -130,7 +177,7 @@ const ProfileScreen = ({ navigation }) => {
         onSave={handleUpdateInterests}
         onCancel={() => setIsEditInterestsVisible(false)}
       />
-    </View>
+    </ScrollView>
   );
 };
 
@@ -163,6 +210,34 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   emptyInterests: {
+    fontSize: 16,
+    fontStyle: 'italic',
+    color: '#666',
+  },
+  meetupsList: {
+    marginBottom: 20,
+  },
+  meetupItem: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+  },
+  meetupTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  meetupDetails: {
+    fontSize: 14,
+    color: '#666',
+  },
+  meetupCategory: {
+    fontSize: 14,
+    color: '#007AFF',
+    marginTop: 5,
+  },
+  emptyMeetups: {
     fontSize: 16,
     fontStyle: 'italic',
     color: '#666',
