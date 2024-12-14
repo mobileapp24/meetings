@@ -12,6 +12,7 @@ const ProfileScreen = ({ navigation }) => {
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [userInterests, setUserInterests] = useState<string[]>([]);
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
@@ -28,6 +29,7 @@ const ProfileScreen = ({ navigation }) => {
         const userData = userDoc.data();
         setUserName(userData.name || '');
         setUserInterests(userData.interests || []);
+        setProfileImageUri(userData.profileImageUrl || null);
         await fetchAttendedMeetups(user.uid, userData.eventsAttended || []);
       }
     }
@@ -130,29 +132,27 @@ const ProfileScreen = ({ navigation }) => {
       <Text style={styles.info}>Email: {userEmail}</Text>
       
       <Text style={styles.sectionTitle}>Interests</Text>
-      <FlatList
-        data={userInterests}
-        renderItem={({ item }) => <Text style={styles.interestItem}>{item}</Text>}
-        keyExtractor={(item, index) => index.toString()}
-        style={styles.interestsList}
-        ListEmptyComponent={<Text style={styles.emptyInterests}>No interests added yet</Text>}
-      />
+      <View style={styles.interestsContainer}>
+        {userInterests.map((interest, index) => (
+          <Text key={index} style={styles.interestItem}>{interest}</Text>
+        ))}
+        {userInterests.length === 0 && (
+          <Text style={styles.emptyInterests}>No interests added yet</Text>
+        )}
+      </View>
       
       <TouchableOpacity style={styles.button} onPress={() => setIsEditInterestsVisible(true)}>
         <Text style={styles.buttonText}>Edit Interests</Text>
       </TouchableOpacity>
       
       <Text style={styles.sectionTitle}>Attended Meetups</Text>
-      {attendedMeetups.length > 0 ? (
-        <FlatList
-          data={attendedMeetups}
-          renderItem={renderAttendedMeetup}
-          keyExtractor={(item) => item.id}
-          style={styles.meetupsList}
-        />
-      ) : (
-        <Text style={styles.emptyMeetups}>No attended meetups yet</Text>
-      )}
+      <ScrollView style={styles.meetupsScrollView}>
+        {attendedMeetups.length > 0 ? (
+          attendedMeetups.map((meetup) => renderAttendedMeetup({ item: meetup }))
+        ) : (
+          <Text style={styles.emptyMeetups}>No attended meetups yet</Text>
+        )}
+      </ScrollView>
       
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Log Out</Text>
@@ -201,20 +201,26 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
-  interestsList: {
-    maxHeight: 100,
+  interestsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     marginBottom: 20,
   },
   interestItem: {
     fontSize: 16,
+    marginRight: 10,
     marginBottom: 5,
+    backgroundColor: '#e0e0e0',
+    padding: 5,
+    borderRadius: 5,
   },
   emptyInterests: {
     fontSize: 16,
     fontStyle: 'italic',
     color: '#666',
   },
-  meetupsList: {
+  meetupsScrollView: {
+    maxHeight: 300,
     marginBottom: 20,
   },
   meetupItem: {
@@ -260,6 +266,8 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
+
+
 
 
 

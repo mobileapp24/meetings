@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, arrayUnion} from 'firebase/firestore';
 import { db, auth } from '../services/config';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
@@ -77,7 +77,14 @@ const CreateMeetupForm: React.FC = () => {
         averageRating: 0,
       };
 
-      await addDoc(collection(db, 'meetups'), meetupData);
+      const docRef = await addDoc(collection(db, 'meetups'), meetupData);
+      
+      // Update the user's eventsAttended
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        eventsAttended: arrayUnion(docRef.id)
+      });
+
       showAlert('Meetup created successfully');
       
       // Clear form fields
@@ -290,5 +297,6 @@ const styles = StyleSheet.create({
 });
 
 export default CreateMeetupForm;
+
 
 
