@@ -43,6 +43,7 @@ const RegisterScreen = ({ navigation }) => {
         email: email,
         interests: [],
         eventsAttended: [],
+        eventosCreados: [],
       };
       console.log('User data prepared:', userData);
 

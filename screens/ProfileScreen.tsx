@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { signOut, deleteUser } from 'firebase/auth';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -19,6 +19,7 @@ const ProfileScreen = ({ navigation }) => {
   const [isConfirmDelete, setIsConfirmDelete] = useState(false);
   const [isEditInterestsVisible, setIsEditInterestsVisible] = useState(false);
   const [attendedMeetups, setAttendedMeetups] = useState<Meetup[]>([]);
+  const [createdMeetups, setCreatedMeetups] = useState<Meetup[]>([]);
 
   const fetchUserData = useCallback(async () => {
     const user = auth.currentUser;
@@ -31,6 +32,7 @@ const ProfileScreen = ({ navigation }) => {
         setUserInterests(userData.interests || []);
         setProfileImageUri(userData.profileImageUrl || null);
         await fetchAttendedMeetups(user.uid, userData.eventsAttended || []);
+        await fetchCreatedMeetups(user.uid, userData.eventosCreados || []);
       }
     }
   }, []);
@@ -48,8 +50,23 @@ const ProfileScreen = ({ navigation }) => {
         return { ...data, id: doc.id };
       });
     
-    console.log('Fetched attended meetups:', meetups);
     setAttendedMeetups(meetups);
+  };
+
+  const fetchCreatedMeetups = async (userId: string, eventosCreados: string[]) => {
+    const meetupsPromises = eventosCreados.map(meetupId => 
+      getDoc(doc(db, 'meetups', meetupId))
+    );
+    
+    const meetupDocs = await Promise.all(meetupsPromises);
+    const meetups: Meetup[] = meetupDocs
+      .filter(doc => doc.exists())
+      .map(doc => {
+        const data = doc.data() as Meetup;
+        return { ...data, id: doc.id };
+      });
+    
+    setCreatedMeetups(meetups);
   };
 
   useFocusEffect(
@@ -114,14 +131,17 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
+ 
 
-
-  const renderAttendedMeetup = ({ item }: { item: Meetup }) => (
-    <View style={styles.meetupItem}>
-      <Text style={styles.meetupTitle}>{item.title}</Text>
-      <Text style={styles.meetupDetails}>{new Date(item.date).toLocaleDateString()}</Text>
-      <Text style={styles.meetupDetails}>{item.location}</Text>
-      <Text style={styles.meetupCategory}>Category: {item.category}</Text>
+  const renderMeetupItem = (meetup: Meetup) => (
+    <View style={styles.meetupItem} key={meetup.id}>
+      <Text style={styles.meetupTitle}>{meetup.title}</Text>
+      <Text style={styles.meetupDetails}>{new Date(meetup.date).toLocaleDateString()}</Text>
+      <Text style={styles.meetupDetails}>{meetup.location}</Text>
+      <Text style={styles.meetupCategory}>Category: {meetup.category}</Text>
+      <Text style={styles.meetupRating}>
+        Average Rating: {meetup.averageRating ? meetup.averageRating.toFixed(1) : 'Not rated'}
+      </Text>
     </View>
   );
 
@@ -148,9 +168,18 @@ const ProfileScreen = ({ navigation }) => {
       <Text style={styles.sectionTitle}>Attended Meetups</Text>
       <ScrollView style={styles.meetupsScrollView}>
         {attendedMeetups.length > 0 ? (
-          attendedMeetups.map((meetup) => renderAttendedMeetup({ item: meetup }))
+          attendedMeetups.map(renderMeetupItem)
         ) : (
           <Text style={styles.emptyMeetups}>No attended meetups yet</Text>
+        )}
+      </ScrollView>
+
+      <Text style={styles.sectionTitle}>Created Meetups</Text>
+      <ScrollView style={styles.meetupsScrollView}>
+        {createdMeetups.length > 0 ? (
+          createdMeetups.map(renderMeetupItem)
+        ) : (
+          <Text style={styles.emptyMeetups}>No created meetups yet</Text>
         )}
       </ScrollView>
       
@@ -220,7 +249,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   meetupsScrollView: {
-    maxHeight: 300,
+    maxHeight: 200,
     marginBottom: 20,
   },
   meetupItem: {
@@ -239,6 +268,11 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   meetupCategory: {
+    fontSize: 14,
+    color: '#007AFF',
+    marginTop: 5,
+  },
+  meetupRating: {
     fontSize: 14,
     color: '#007AFF',
     marginTop: 5,
@@ -266,7 +300,6 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
-
 
 
 
