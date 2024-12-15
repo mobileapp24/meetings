@@ -71,9 +71,10 @@ const ProfileScreen = ({ navigation }) => {
 
   
   const averageRating = useMemo(() => {
-    if (createdMeetups.length === 0) return 0;
-    const totalRating = createdMeetups.reduce((sum, meetup) => sum + (meetup.averageRating || 0), 0);
-    return totalRating / createdMeetups.length;
+    const finishedMeetups = createdMeetups.filter(meetup => meetup.isFinished);
+    if (finishedMeetups.length === 0) return 0;
+    const totalRating = finishedMeetups.reduce((sum, meetup) => sum + (meetup.averageRating || 0), 0);
+    return totalRating / finishedMeetups.length;
   }, [createdMeetups]);
 
 
@@ -158,8 +159,9 @@ const ProfileScreen = ({ navigation }) => {
       <Text style={styles.title}>Profile</Text>
       <Text style={styles.info}>Name: {userName}</Text>
       <Text style={styles.info}>Email: {userEmail}</Text>
-      <Text style={styles.info}>Rating: {averageRating.toFixed(1)}</Text>
-      
+      <Text style={styles.info}>
+        Rating: {averageRating > 0 ? averageRating.toFixed(1) : 'Not rated yet'}
+      </Text>
       
       <Text style={styles.sectionTitle}>Interests</Text>
       <View style={styles.interestsContainer}>

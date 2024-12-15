@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Button, Text, Platform, ScrollView, SafeAreaView } from 'react-native';
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../services/config';
@@ -6,6 +6,8 @@ import MeetupList from '../components/MeetupList';
 import CreateMeetupForm from '../components/CreateMeetupForm';
 import { Meetup } from '../types/meetup';
 import { Picker } from '@react-native-picker/picker';
+import { updateMeetupStatus } from '../utils/meetupUtils';
+import { useFocusEffect } from '@react-navigation/native';
 
 const categories = ['All', 'Sports', 'Study', 'Social', 'Work', 'Other'];
 
@@ -17,16 +19,16 @@ const HomeScreen: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  useEffect(() => {
+  const fetchMeetups = useCallback(() => {
     const now = new Date();
     const activeMeetupsQuery = query(
       collection(db, 'meetups'),
-      where('date', '>', now.toISOString()),
+      where('isFinished', '==', false),
       orderBy('date', 'asc')
     );
     const finishedMeetupsQuery = query(
       collection(db, 'meetups'),
-      where('date', '<=', now.toISOString()),
+      where('isFinished', '==', true),
       orderBy('date', 'desc')
     );
 
@@ -53,6 +55,14 @@ const HomeScreen: React.FC = () => {
       unsubscribeFinished();
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      updateMeetupStatus().then(() => {
+        fetchMeetups();
+      });
+    }, [fetchMeetups])
+  );
 
   useEffect(() => {
     if (selectedCategory === 'All') {
@@ -173,4 +183,5 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+
 

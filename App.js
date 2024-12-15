@@ -10,7 +10,6 @@ import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import MyMeetupsScreen from './screens/MyMeetupsScreen';
 import MapScreen from './screens/MapScreen';
-import CreateMeetupScreen from './screens/CreateMeetupScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -30,8 +29,6 @@ const MainTabs = () => {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Map') {
             iconName = focused ? 'map' : 'map-outline';
-          } else if (route.name === 'Create Meetup') {
-            iconName = focused ? 'add-circle' : 'add-circle-outline';
           }
 
           return <Icon name={iconName} size={size} color={color} />;
@@ -41,7 +38,6 @@ const MainTabs = () => {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="My Meetups" component={MyMeetupsScreen} />
       <Tab.Screen name="Map" component={MapScreen} />
-      <Tab.Screen name="Create Meetup" component={CreateMeetupScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -72,3 +68,4 @@ const App = () => {
 };
 
 export default App;
+
