@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { signOut, deleteUser } from 'firebase/auth';
@@ -68,6 +68,14 @@ const ProfileScreen = ({ navigation }) => {
     
     setCreatedMeetups(meetups);
   };
+
+  
+  const averageRating = useMemo(() => {
+    if (createdMeetups.length === 0) return 0;
+    const totalRating = createdMeetups.reduce((sum, meetup) => sum + (meetup.averageRating || 0), 0);
+    return totalRating / createdMeetups.length;
+  }, [createdMeetups]);
+
 
   useFocusEffect(
     useCallback(() => {
@@ -150,6 +158,8 @@ const ProfileScreen = ({ navigation }) => {
       <Text style={styles.title}>Profile</Text>
       <Text style={styles.info}>Name: {userName}</Text>
       <Text style={styles.info}>Email: {userEmail}</Text>
+      <Text style={styles.info}>Rating: {averageRating.toFixed(1)}</Text>
+      
       
       <Text style={styles.sectionTitle}>Interests</Text>
       <View style={styles.interestsContainer}>
