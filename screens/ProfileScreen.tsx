@@ -17,7 +17,6 @@ const ProfileScreen = ({ navigation }) => {
   const [alertMessage, setAlertMessage] = useState('');
   const [isConfirmDelete, setIsConfirmDelete] = useState(false);
   const [isEditInterestsVisible, setIsEditInterestsVisible] = useState(false);
-  const [attendedMeetups, setAttendedMeetups] = useState<Meetup[]>([]);
   const [createdMeetups, setCreatedMeetups] = useState<Meetup[]>([]);
 
   const fetchUserData = useCallback(async () => {
@@ -29,27 +28,11 @@ const ProfileScreen = ({ navigation }) => {
         const userData = userDoc.data();
         setUserName(userData.name || '');
         setUserInterests(userData.interests || []);
-        await fetchAttendedMeetups(user.uid, userData.eventsAttended || []);
         await fetchCreatedMeetups(user.uid, userData.eventosCreados || []);
       }
     }
   }, []);
 
-  const fetchAttendedMeetups = async (userId: string, eventsAttended: string[]) => {
-    const meetupsPromises = eventsAttended.map(meetupId => 
-      getDoc(doc(db, 'meetups', meetupId))
-    );
-    
-    const meetupDocs = await Promise.all(meetupsPromises);
-    const meetups: Meetup[] = meetupDocs
-      .filter(doc => doc.exists())
-      .map(doc => {
-        const data = doc.data() as Meetup;
-        return { ...data, id: doc.id };
-      });
-    
-    setAttendedMeetups(meetups);
-  };
 
   const fetchCreatedMeetups = async (userId: string, eventosCreados: string[]) => {
     const meetupsPromises = eventosCreados.map(meetupId => 
@@ -175,23 +158,7 @@ const ProfileScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>Edit Interests</Text>
       </TouchableOpacity>
       
-      <Text style={styles.sectionTitle}>Attended Meetups</Text>
-      <ScrollView style={styles.meetupsScrollView}>
-        {attendedMeetups.length > 0 ? (
-          attendedMeetups.map(renderMeetupItem)
-        ) : (
-          <Text style={styles.emptyMeetups}>No attended meetups yet</Text>
-        )}
-      </ScrollView>
-
-      <Text style={styles.sectionTitle}>Created Meetups</Text>
-      <ScrollView style={styles.meetupsScrollView}>
-        {createdMeetups.length > 0 ? (
-          createdMeetups.map(renderMeetupItem)
-        ) : (
-          <Text style={styles.emptyMeetups}>No created meetups yet</Text>
-        )}
-      </ScrollView>
+      
       
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Log Out</Text>
