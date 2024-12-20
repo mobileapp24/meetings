@@ -12,7 +12,6 @@ const ProfileScreen = ({ navigation }) => {
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [userInterests, setUserInterests] = useState<string[]>([]);
-  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
@@ -30,7 +29,6 @@ const ProfileScreen = ({ navigation }) => {
         const userData = userDoc.data();
         setUserName(userData.name || '');
         setUserInterests(userData.interests || []);
-        setProfileImageUri(userData.profileImageUrl || null);
         await fetchAttendedMeetups(user.uid, userData.eventsAttended || []);
         await fetchCreatedMeetups(user.uid, userData.eventosCreados || []);
       }
