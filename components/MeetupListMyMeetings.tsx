@@ -56,14 +56,14 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({ onMeetupPress }) =>
     );
 
     // Set up an interval to check and update meetup lists every minute
-    const intervalId = setInterval(() => {
-      updateMeetupLists([...upcomingMeetups, ...pastMeetups]);
-    }, 60000);
+   // const intervalId = setInterval(() => {
+   //   updateMeetupLists([...upcomingMeetups, ...pastMeetups]);
+   // }, 30000);
 
     return () => {
       unsubscribeParticipating();
       unsubscribeCreated();
-      clearInterval(intervalId);
+      //clearInterval(intervalId);
     };
   }, [updateMeetupLists]);
 
