@@ -12,8 +12,6 @@ interface MeetupListProps {
 }
 
 const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinishedList }) => {
-  const [selectedMeetup, setSelectedMeetup] = useState<Meetup | null>(null);
-  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
 
   const handleJoinMeetup = async (meetup: Meetup) => {
     const user = auth.currentUser;
@@ -57,50 +55,17 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
     }
   };
 
-  const handleDeleteMeetup = async (meetupId: string) => {
-    try {
-      await deleteDoc(doc(db, 'meetups', meetupId));
-      console.log('Meetup deleted successfully');
-    } catch (error) {
-      console.error('Error deleting meetup:', error);
-    }
-  };
+ 
 
-  const handleRateMeetup = (meetup: Meetup) => {
-    setSelectedMeetup(meetup);
-    setIsRatingModalVisible(true);
-  };
 
-  const handleRatingSubmit = async (rating: number) => {
-    if (selectedMeetup && auth.currentUser) {
-      try {
-        const meetupRef = doc(db, 'meetups', selectedMeetup.id);
-        const updatedRatings = {
-          ...selectedMeetup.ratings,
-          [auth.currentUser.uid]: rating
-        };
-        const ratingValues = Object.values(updatedRatings);
-        const averageRating = ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length;
 
-        await updateDoc(meetupRef, {
-          ratings: updatedRatings,
-          averageRating: averageRating
-        });
-
-        console.log('Rating submitted successfully');
-      } catch (error) {
-        console.error('Error submitting rating:', error);
-      }
-    }
-    setIsRatingModalVisible(false);
-  };
+  
 
   const renderMeetupItem = ({ item }: { item: Meetup }) => {
     const user = auth.currentUser;
     const isUserInMeetup = user && item.participants?.includes(user.uid);
     const isMeetupFull = item.participants && item.participants.length >= item.maxParticipants;
-    const isCreator = user && user.uid === item.creatorId;
-    const canRate = isFinishedList && isUserInMeetup && (!item.ratings || !item.ratings[user!.uid]);
+   
     const userRating = user && item.ratings ? item.ratings[user.uid] : null;
 
     const meetupDate = new Date(item.date);
@@ -143,22 +108,7 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
               </Text>
             </TouchableOpacity>
           )}
-          {isCreator && !isFinishedList && (
-            <TouchableOpacity
-              style={[styles.deleteButton]}
-              onPress={() => handleDeleteMeetup(item.id)}
-            >
-              <Text style={styles.deleteButtonText}>Delete</Text>
-            </TouchableOpacity>
-          )}
-          {canRate && (
-            <TouchableOpacity
-              style={[styles.rateButton]}
-              onPress={() => handleRateMeetup(item)}
-            >
-              <Text style={styles.rateButtonText}>Rate</Text>
-            </TouchableOpacity>
-          )}
+          
         </View>
       </TouchableOpacity>
     );
@@ -171,11 +121,6 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
         renderItem={renderMeetupItem}
         keyExtractor={(item) => item.id}
         style={styles.list}
-      />
-      <RateMeetupModal
-        visible={isRatingModalVisible}
-        onClose={() => setIsRatingModalVisible(false)}
-        onSubmit={handleRatingSubmit}
       />
     </>
   );
