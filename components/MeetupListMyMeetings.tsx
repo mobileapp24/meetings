@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { Meetup } from '../types/meetup';
 import { auth, db } from '../services/config';
 import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, arrayRemove, arrayUnion, getDoc } from 'firebase/firestore';
 import RateMeetupModal from './RateMeetupModal';
+import AccordionSection from './AccordionSection';
 
 interface MeetupMyMeetingsProps {
+
   onMeetupPress: (meetup: Meetup) => void;
+  isFinishedList: boolean;
 }
 
-const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({ onMeetupPress }) => {
+const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress, isFinishedList }) => {
   const [upcomingMeetups, setUpcomingMeetups] = useState<Meetup[]>([]);
   const [pastMeetups, setPastMeetups] = useState<Meetup[]>([]);
   const [createdMeetups, setCreatedMeetups] = useState<Meetup[]>([]);
@@ -178,13 +181,26 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({ onMeetupPress }) =>
     const isUserInMeetup = user && meetup.participants && meetup.participants.includes(user.uid);
     const canRate = sectionType === 'past' && (!meetup.ratings || !meetup.ratings[user!.uid]);
     const meetupDate = new Date(meetup.date);
+    const userRating = user && meetup.ratings ? meetup.ratings[user.uid] : null;
 
     return (
       <View style={styles.meetupItem}>
         <TouchableOpacity onPress={() => onMeetupPress(meetup)}>
           <Text style={styles.meetupTitle}>{meetup.title}</Text>
-          <Text style={styles.meetupDetails}>{meetupDate.toLocaleString()}</Text>
-          <Text style={styles.meetupDetails}>{meetup.location}</Text>
+          <Text style={styles.meetupDetails}>Date: {meetupDate.toLocaleString()}</Text>
+          <Text style={styles.meetupDetails}>Location: {meetup.location}</Text>
+          <Text style={styles.meetupDetails}>
+           Participants: {meetup.participants ? meetup.participants.length : 0}/{meetup.maxParticipants}
+          </Text>
+          <Text style={styles.meetupDetails}>Created by: {meetup.creatorName}</Text>
+          {(sectionType === 'past'|| sectionType === 'created') && meetup.isFinished == true &&(
+                    <Text style={styles.meetupRating}>
+                      Average Rating: {meetup.averageRating ? meetup.averageRating.toFixed(1) : 'Not rated'}
+                    </Text>
+                  )}
+          {  (sectionType === 'past'|| sectionType === 'created') && isUserInMeetup && userRating !== null && meetup.isFinished == true && (
+                    <Text style={styles.userRating}>Your Rating: {userRating}</Text>
+                  )}
         </TouchableOpacity>
         {sectionType === 'upcoming' && (
           <TouchableOpacity
@@ -194,6 +210,7 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({ onMeetupPress }) =>
             <Text style={styles.buttonText}>{isUserInMeetup ? 'Leave' : 'Join'}</Text>
           </TouchableOpacity>
         )}
+        
         {sectionType === 'past' && canRate && (
           <TouchableOpacity
             style={[styles.button, styles.rateButton]}
@@ -215,44 +232,52 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({ onMeetupPress }) =>
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Upcoming Meetups</Text>
+    <ScrollView style={styles.container}>
+      <AccordionSection title="Upcoming Meetups">
       <FlatList
         data={upcomingMeetups}
         renderItem={({ item }) => renderMeetupItem(item, 'upcoming')}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={<Text style={styles.emptyText}>No upcoming meetups</Text>}
+        
       />
+       </AccordionSection>
 
-      <Text style={styles.sectionTitle}>Past Meetups</Text>
+       <AccordionSection title="Past Meetups">
       <FlatList
         data={pastMeetups}
         renderItem={({ item }) => renderMeetupItem(item, 'past')}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={<Text style={styles.emptyText}>No past meetups</Text>}
+       
       />
+       </AccordionSection>
 
-      <Text style={styles.sectionTitle}>Created Meetups</Text>
+       <AccordionSection title="Created Meetups">
       <FlatList
         data={createdMeetups}
         renderItem={({ item }) => renderMeetupItem(item, 'created')}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={<Text style={styles.emptyText}>No created meetups</Text>}
+     
       />
+      </AccordionSection>
 
       <RateMeetupModal
         visible={isRatingModalVisible}
         onClose={() => setIsRatingModalVisible(false)}
         onSubmit={handleRatingSubmit}
       />
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+ 
   container: {
     flex: 1,
-    padding: 10,
+    padding: 16,
+    backgroundColor: '#f9fafb',
   },
   sectionTitle: {
     fontSize: 20,
@@ -269,12 +294,15 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
   },
   meetupTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 8,
   },
   meetupDetails: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 2,
   },
   button: {
     padding: 10,
@@ -302,6 +330,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     color: '#666',
+  },
+  meetupRating: {
+    fontSize: 14,
+    color: '#007AFF',
+    marginTop: 5,
+    fontWeight: 'bold',
+  },
+  userRating: {
+    fontSize: 14,
+    color: '#4CD964',
+    marginTop: 2,
+    fontWeight: 'bold',
   },
 });
 
