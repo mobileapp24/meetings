@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Meetup } from '../types/meetup';
 import { auth, db } from '../services/config';
-import { updateDoc, doc, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
-import RateMeetupModal from './RateMeetupModal';
+import { updateDoc, doc, arrayUnion, arrayRemove,  } from 'firebase/firestore';
+
 
 interface MeetupListProps {
   meetups: Meetup[];
@@ -76,22 +76,26 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
         <View style={styles.meetupInfo}>
           <Text style={styles.meetupTitle}>{item.title}</Text>
           <Text style={styles.meetupCategory}>Category: {item.category}</Text>
+          <Text style={styles.meetupDetails}>Description: {item.description}</Text>
           <Text style={styles.meetupDetails}>
-            {meetupDate.toLocaleDateString()} at {formattedTime}
+            Date: {meetupDate.toLocaleDateString()} at {formattedTime}
           </Text>
-          <Text style={styles.meetupDetails}>{item.location}</Text>
+          <Text style={styles.meetupDetails}>Location: {item.location}</Text>
           <Text style={styles.meetupDetails}>
             Participants: {item.participants ? item.participants.length : 0}/{item.maxParticipants}
           </Text>
           <Text style={styles.meetupCreator}>Created by: {item.creatorName}</Text>
+
+
           {isFinishedList && (
             <Text style={styles.meetupRating}>
               Average Rating: {item.averageRating ? item.averageRating.toFixed(1) : 'Not rated'}
             </Text>
           )}
-          {isUserInMeetup && userRating !== null && (
+          {isUserInMeetup && userRating !== null && isFinishedList&& (
             <Text style={styles.userRating}>Your Rating: {userRating}</Text>
           )}
+
         </View>
         <View style={styles.buttonContainer}>
           {!isFinishedList && (
@@ -128,15 +132,18 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
 
 const styles = StyleSheet.create({
   list: {
-    width: '100%',
+    width: '98%',
+   
   },
   meetupItem: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  
+    
   },
   meetupInfo: {
     flex: 1,
@@ -144,7 +151,8 @@ const styles = StyleSheet.create({
   meetupTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 5,
+    color: '#1f2937',
+    marginBottom: 8,
   },
   meetupCategory: {
     fontSize: 14,
@@ -184,7 +192,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   leaveButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#F44336',
   },
   disabledButton: {
     backgroundColor: '#999',

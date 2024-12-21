@@ -117,11 +117,13 @@ const HomeScreen: React.FC = () => {
             <Text style={styles.filterLabel}>Filter by Category:</Text>
             {renderCategoryPicker()}
             <Text style={styles.sectionTitle}>Active Meetups</Text>
+            
             <MeetupList
               meetups={filteredActiveMeetups}
               onMeetupPress={handleMeetupPress}
               isFinishedList={false}
             />
+            
             <Text style={styles.sectionTitle}>Finished Meetups</Text>
             <MeetupList
               meetups={filteredFinishedMeetups}
@@ -144,10 +146,13 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    padding: 16,
+    backgroundColor: '#f9fafb',
   },
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: '#fffff',
   },
   scrollView: {
     flex: 1,
@@ -158,10 +163,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   sectionTitle: {
-    fontSize: 20,
+    backgroundColor: '#f3f4f6',
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: 18,
     fontWeight: 'bold',
+    color: '#374151',
     marginTop: 20,
-    marginBottom: 10,
+    borderRadius: 12,
   },
   picker: {
     borderWidth: 1,
