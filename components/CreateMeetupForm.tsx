@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
-import { collection, addDoc, updateDoc, doc, arrayUnion } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, arrayUnion, GeoPoint } from 'firebase/firestore';
 import { db, auth } from '../services/config';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
@@ -11,7 +11,9 @@ const categories = ['Sports', 'Study', 'Social', 'Work', 'Other'];
 const CreateMeetupForm: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
+  const [address, setAddress] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   const [date, setDate] = useState(new Date());
   const [maxParticipants, setMaxParticipants] = useState('');
   const [category, setCategory] = useState(categories[0]);
@@ -34,8 +36,12 @@ const CreateMeetupForm: React.FC = () => {
       showAlert('Please enter a description');
       return false;
     }
-    if (!location.trim()) {
-      showAlert('Please enter a location');
+    if (!address.trim()) {
+      showAlert('Please enter an address');
+      return false;
+    }
+    if (!latitude.trim() || !longitude.trim() || isNaN(Number(latitude)) || isNaN(Number(longitude))) {
+      showAlert('Please enter valid latitude and longitude');
       return false;
     }
     if (date <= new Date()) {
@@ -61,13 +67,16 @@ const CreateMeetupForm: React.FC = () => {
         return;
       }
 
+      const coordinates = new GeoPoint(Number(latitude), Number(longitude));
+
       const meetupData = {
         title,
         description,
-        location,
+        address,
+        coordinates,
         date: date.toISOString(),
         maxParticipants: parseInt(maxParticipants, 10),
-        participants: [user.uid], // Creator is the first participant
+        participants: [user.uid],
         creatorId: user.uid,
         creatorName: user.displayName || 'Anonymous',
         category,
@@ -79,7 +88,6 @@ const CreateMeetupForm: React.FC = () => {
 
       const docRef = await addDoc(collection(db, 'meetups'), meetupData);
       
-      // Update the user's eventsAttended and eventosCreados
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         eventsAttended: arrayUnion(docRef.id),
@@ -91,7 +99,9 @@ const CreateMeetupForm: React.FC = () => {
       // Clear form fields
       setTitle('');
       setDescription('');
-      setLocation('');
+      setAddress('');
+      setLatitude('');
+      setLongitude('');
       setDate(new Date());
       setMaxParticipants('');
       setCategory(categories[0]);
@@ -209,10 +219,26 @@ const CreateMeetupForm: React.FC = () => {
       />
       <TextInput
         style={styles.input}
-        placeholder="Location"
-        value={location}
-        onChangeText={setLocation}
+        placeholder="Address"
+        value={address}
+        onChangeText={setAddress}
       />
+      <View style={styles.coordinatesContainer}>
+        <TextInput
+          style={[styles.input, styles.coordinateInput]}
+          placeholder="Latitude"
+          value={latitude}
+          onChangeText={setLatitude}
+          keyboardType="numeric"
+        />
+        <TextInput
+          style={[styles.input, styles.coordinateInput]}
+          placeholder="Longitude"
+          value={longitude}
+          onChangeText={setLongitude}
+          keyboardType="numeric"
+        />
+      </View>
       {renderDateTimePicker()}
       <TextInput
         style={styles.input}
@@ -262,6 +288,14 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
+  coordinatesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  coordinateInput: {
+    flex: 1,
+    marginRight: 5,
+  },
   button: {
     backgroundColor: '#007AFF',
     padding: 10,
@@ -298,7 +332,3 @@ const styles = StyleSheet.create({
 });
 
 export default CreateMeetupForm;
-
-
-
-
