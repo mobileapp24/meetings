@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
-import { collection, addDoc, updateDoc, doc, arrayUnion } from 'firebase/firestore';
+import React, { useState, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform, Dimensions } from 'react-native';
+import { collection, addDoc, updateDoc, doc, arrayUnion, GeoPoint } from 'firebase/firestore';
 import { db, auth } from '../services/config';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import CustomAlert from './CustomAlert';
+import {APIProvider, Map, MapCameraChangedEvent, MapMouseEvent, Marker  } from '@vis.gl/react-google-maps';
+
+
+
 
 const categories = ['Sports', 'Study', 'Social', 'Work', 'Other'];
 
 const CreateMeetupForm: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
+  const [address, setAddress] = useState('');
+  const [coordinates, setCoordinates] = useState<GeoPoint | null>(null);
   const [date, setDate] = useState(new Date());
   const [maxParticipants, setMaxParticipants] = useState('');
   const [category, setCategory] = useState(categories[0]);
@@ -19,6 +24,8 @@ const CreateMeetupForm: React.FC = () => {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+
+  const mapRef = useRef(null);
 
   const showAlert = (message: string) => {
     setAlertMessage(message);
@@ -34,8 +41,12 @@ const CreateMeetupForm: React.FC = () => {
       showAlert('Please enter a description');
       return false;
     }
-    if (!location.trim()) {
-      showAlert('Please enter a location');
+    if (!address.trim()) {
+      showAlert('Please enter an address');
+      return false;
+    }
+    if (!coordinates) {
+      showAlert('Please select a location on the map');
       return false;
     }
     if (date <= new Date()) {
@@ -64,10 +75,11 @@ const CreateMeetupForm: React.FC = () => {
       const meetupData = {
         title,
         description,
-        location,
+        address,
+        coordinates,
         date: date.toISOString(),
         maxParticipants: parseInt(maxParticipants, 10),
-        participants: [user.uid], // Creator is the first participant
+        participants: [user.uid],
         creatorId: user.uid,
         creatorName: user.displayName || 'Anonymous',
         category,
@@ -79,7 +91,6 @@ const CreateMeetupForm: React.FC = () => {
 
       const docRef = await addDoc(collection(db, 'meetups'), meetupData);
       
-      // Update the user's eventsAttended and eventosCreados
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         eventsAttended: arrayUnion(docRef.id),
@@ -91,7 +102,8 @@ const CreateMeetupForm: React.FC = () => {
       // Clear form fields
       setTitle('');
       setDescription('');
-      setLocation('');
+      setAddress('');
+      setCoordinates(null);
       setDate(new Date());
       setMaxParticipants('');
       setCategory(categories[0]);
@@ -191,6 +203,77 @@ const CreateMeetupForm: React.FC = () => {
     }
   };
 
+  const renderMap = () => {
+    console.log("mapa")
+    if (Platform.OS === 'web') {
+      console.log("mapa web")
+      return (
+        <View style={styles.mapContainer}>
+        <APIProvider apiKey={'AIzaSyDRWYupSy0PVuX6sGtCLneGI3qqJj3JCcE'} onLoad={() => console.log('Maps API has loaded.')}>
+           <Map
+  
+               defaultZoom={13}
+               defaultCenter={ { lat: 45.4642, lng: 9.1900 } }
+               onCameraChanged={ (ev: MapCameraChangedEvent) =>
+               console.log('camera changed:', ev.detail.center, 'zoom:', ev.detail.zoom)
+               }
+               onClick = {(e: MapMouseEvent) => {
+                const  latitude = e.detail.latLng.lat;
+                const longitude = e.detail.latLng.lng;
+                
+                setCoordinates(new GeoPoint(latitude, longitude));
+                }}>
+               
+                {coordinates && (
+                  <Marker
+                  position={{lat:coordinates.latitude, lng: coordinates.longitude}}
+                 />
+                )}
+    
+           </Map>
+         </APIProvider>
+         </View>
+      );
+    } else {
+
+      let MapView: any;
+      let Marker: any;
+  
+  
+      const Maps = require('react-native-maps');
+      MapView = Maps.default;
+      Marker = Maps.Marker;
+
+      return (
+        <View style={styles.mapContainer}>
+          <MapView
+            ref={mapRef}
+            style={styles.map}
+            initialRegion={{
+              latitude: 45.4642,
+              longitude: 9.1900,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+            onPress={(e) => {
+              const { latitude, longitude } = e.nativeEvent.coordinate;
+              setCoordinates(new GeoPoint(latitude, longitude));
+            }}
+          >
+            {coordinates && (
+              <Marker
+                coordinate={{
+                  latitude: coordinates.latitude,
+                  longitude: coordinates.longitude,
+                }}
+              />
+            )}
+          </MapView>
+        </View>
+      );
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Create New Meetup</Text>
@@ -209,10 +292,16 @@ const CreateMeetupForm: React.FC = () => {
       />
       <TextInput
         style={styles.input}
-        placeholder="Location"
-        value={location}
-        onChangeText={setLocation}
+        placeholder="Address"
+        value={address}
+        onChangeText={setAddress}
       />
+      {renderMap()}
+      {coordinates && (
+        <Text style={styles.coordinatesText}>
+          Selected location: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
+        </Text>
+      )}
       {renderDateTimePicker()}
       <TextInput
         style={styles.input}
@@ -267,6 +356,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
+    marginTop: 10,
   },
   buttonText: {
     color: 'white',
@@ -295,10 +385,24 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     width: '100%',
   },
+  mapContainer: {
+    height: 300,
+    marginBottom: 10,
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  webMapContainer: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  coordinatesText: {
+    marginBottom: 10,
+  },
 });
 
 export default CreateMeetupForm;
-
-
-
-
