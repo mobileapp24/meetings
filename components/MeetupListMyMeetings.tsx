@@ -187,6 +187,7 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress, isFin
       <View style={styles.meetupItem}>
         <TouchableOpacity onPress={() => onMeetupPress(meetup)}>
           <Text style={styles.meetupTitle}>{meetup.title}</Text>
+          <Text style={styles.meetupDetails}>Description: {meetup.description}</Text>
           <Text style={styles.meetupDetails}>Date: {meetupDate.toLocaleString()}</Text>
           <Text style={styles.meetupDetails}>Location: {meetup.location}</Text>
           <Text style={styles.meetupDetails}>

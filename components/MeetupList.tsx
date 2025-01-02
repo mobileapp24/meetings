@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { Meetup } from '../types/meetup';
-import { auth, db } from '../services/config';
-import { updateDoc, doc, arrayUnion, arrayRemove,  } from 'firebase/firestore';
-
+import { auth, db, functions } from '../services/config';
+import { updateDoc, doc, arrayUnion, arrayRemove, deleteDoc, getDoc } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import RateMeetupModal from './RateMeetupModal';
 
 interface MeetupListProps {
   meetups: Meetup[];
@@ -12,6 +13,11 @@ interface MeetupListProps {
 }
 
 const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinishedList }) => {
+  const [selectedMeetup, setSelectedMeetup] = useState<Meetup | null>(null);
+  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+
+  const sendJoinMeetupEmail = httpsCallable(functions, 'sendJoinMeetupEmail');
+  const sendMeetupDeletedEmail = httpsCallable(functions, 'sendMeetupDeletedEmail');
 
   const handleJoinMeetup = async (meetup: Meetup) => {
     const user = auth.currentUser;
@@ -37,6 +43,7 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
         console.log('Left meetup successfully');
       } catch (error) {
         console.error('Error leaving meetup:', error);
+        Alert.alert('Error', 'Failed to leave the meetup. Please try again.');
       }
     } else if (meetup.participants.length < meetup.maxParticipants) {
       try {
@@ -47,25 +54,99 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
           eventsAttended: arrayUnion(meetup.id)
         });
         console.log('Joined meetup successfully');
+
+        // Send email notification
+        const userDoc = await getDoc(userRef);
+        const userData = userDoc.data();
+        if (userData && userData.email) {
+          try {
+            await sendJoinMeetupEmail({ userEmail: userData.email, meetupTitle: meetup.title });
+            console.log('Join meetup email sent successfully');
+          } catch (emailError) {
+            console.error('Error sending join meetup email:', emailError);
+            Alert.alert(
+              'Warning',
+              'Joined the meetup, but failed to send confirmation email. Please check your internet connection.'
+            );
+          }
+        }
       } catch (error) {
         console.error('Error joining meetup:', error);
+        Alert.alert('Error', 'Failed to join the meetup. Please try again.');
       }
     } else {
-      console.log('Meetup is full');
+      Alert.alert('Error', 'This meetup is full.');
     }
   };
 
- 
+  const handleDeleteMeetup = async (meetupId: string) => {
+    try {
+      const meetupRef = doc(db, 'meetups', meetupId);
+      const meetupDoc = await getDoc(meetupRef);
+      const meetupData = meetupDoc.data() as Meetup;
 
+      if (meetupData && meetupData.participants) {
+        // Send email to all participants
+        for (const participantId of meetupData.participants) {
+          const userRef = doc(db, 'users', participantId);
+          const userDoc = await getDoc(userRef);
+          const userData = userDoc.data();
+          if (userData && userData.email) {
+            try {
+              await sendMeetupDeletedEmail({ userEmail: userData.email, meetupTitle: meetupData.title });
+            } catch (emailError) {
+              console.error('Error sending meetup deleted email:', emailError);
+            }
+          }
+        }
+      }
 
+      await deleteDoc(meetupRef);
+      console.log('Meetup deleted successfully');
+      Alert.alert('Success', 'Meetup deleted successfully');
+    } catch (error) {
+      console.error('Error deleting meetup:', error);
+      Alert.alert('Error', 'Failed to delete the meetup. Please try again.');
+    }
+  };
 
-  
+  const handleRateMeetup = (meetup: Meetup) => {
+    setSelectedMeetup(meetup);
+    setIsRatingModalVisible(true);
+  };
+
+  const handleRatingSubmit = async (rating: number) => {
+    if (selectedMeetup && auth.currentUser) {
+      try {
+        const meetupRef = doc(db, 'meetups', selectedMeetup.id);
+        const updatedRatings = {
+          ...selectedMeetup.ratings,
+          [auth.currentUser.uid]: rating
+        };
+        const ratingValues = Object.values(updatedRatings);
+        const averageRating = ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length;
+
+        await updateDoc(meetupRef, {
+          ratings: updatedRatings,
+          averageRating: averageRating
+        });
+
+        console.log('Rating submitted successfully');
+        Alert.alert('Success', 'Your rating has been submitted.');
+      } catch (error) {
+        console.error('Error submitting rating:', error);
+        Alert.alert('Error', 'Failed to submit rating. Please try again.');
+      }
+    }
+    setIsRatingModalVisible(false);
+  };
 
   const renderMeetupItem = ({ item }: { item: Meetup }) => {
     const user = auth.currentUser;
     const isUserInMeetup = user && item.participants?.includes(user.uid);
     const isMeetupFull = item.participants && item.participants.length >= item.maxParticipants;
-   
+    const isCreator = user && user.uid === item.creatorId;
+    const canRate = isFinishedList && isUserInMeetup && (!item.ratings || !item.ratings[user!.uid]);
     const userRating = user && item.ratings ? item.ratings[user.uid] : null;
 
     const meetupDate = new Date(item.date);
@@ -76,26 +157,22 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
         <View style={styles.meetupInfo}>
           <Text style={styles.meetupTitle}>{item.title}</Text>
           <Text style={styles.meetupCategory}>Category: {item.category}</Text>
-          <Text style={styles.meetupDetails}>Description: {item.description}</Text>
           <Text style={styles.meetupDetails}>
-            Date: {meetupDate.toLocaleDateString()} at {formattedTime}
+            {meetupDate.toLocaleDateString()} at {formattedTime}
           </Text>
-          <Text style={styles.meetupDetails}>Location: {item.location}</Text>
+          <Text style={styles.meetupDetails}>{item.location}</Text>
           <Text style={styles.meetupDetails}>
             Participants: {item.participants ? item.participants.length : 0}/{item.maxParticipants}
           </Text>
           <Text style={styles.meetupCreator}>Created by: {item.creatorName}</Text>
-
-
           {isFinishedList && (
             <Text style={styles.meetupRating}>
               Average Rating: {item.averageRating ? item.averageRating.toFixed(1) : 'Not rated'}
             </Text>
           )}
-          {isUserInMeetup && userRating !== null && isFinishedList&& (
+          {isUserInMeetup && userRating !== null && (
             <Text style={styles.userRating}>Your Rating: {userRating}</Text>
           )}
-
         </View>
         <View style={styles.buttonContainer}>
           {!isFinishedList && (
@@ -112,7 +189,22 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
               </Text>
             </TouchableOpacity>
           )}
-          
+          {isCreator && !isFinishedList && (
+            <TouchableOpacity
+              style={[styles.deleteButton]}
+              onPress={() => handleDeleteMeetup(item.id)}
+            >
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          )}
+          {canRate && (
+            <TouchableOpacity
+              style={[styles.rateButton]}
+              onPress={() => handleRateMeetup(item)}
+            >
+              <Text style={styles.rateButtonText}>Rate</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </TouchableOpacity>
     );
@@ -126,24 +218,29 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
         keyExtractor={(item) => item.id}
         style={styles.list}
       />
+      <RateMeetupModal
+        visible={isRatingModalVisible}
+        onClose={() => setIsRatingModalVisible(false)}
+        onSubmit={handleRatingSubmit}
+      />
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  list: {
-    width: '98%',
-   
-  },
   meetupItem: {
+    backgroundColor: 'white',
+    padding: 15,
+    marginVertical: 8,
+    marginHorizontal: 16,
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  
-    
   },
   meetupInfo: {
     flex: 1,
@@ -151,22 +248,20 @@ const styles = StyleSheet.create({
   meetupTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 8,
-  },
-  meetupCategory: {
-    fontSize: 14,
-    color: '#007AFF',
-    marginBottom: 5,
   },
   meetupDetails: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 2,
+    marginTop: 5,
+  },
+  meetupCategory: {
+    fontSize: 14,
+    color: '#007AFF',
+    marginTop: 5,
   },
   meetupCreator: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: 14,
+    color: '#666',
     marginTop: 5,
   },
   meetupRating: {
@@ -176,54 +271,53 @@ const styles = StyleSheet.create({
   },
   userRating: {
     fontSize: 14,
-    color: '#4CD964',
-    marginTop: 2,
+    color: 'green',
+    marginTop: 5,
   },
   buttonContainer: {
     flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   joinButton: {
     backgroundColor: '#007AFF',
     padding: 10,
     borderRadius: 5,
-    marginLeft: 10,
-    marginBottom: 5,
+    marginTop: 10,
   },
   leaveButton: {
-    backgroundColor: '#F44336',
+    backgroundColor: 'red',
   },
   disabledButton: {
-    backgroundColor: '#999',
-  },
-  deleteButton: {
-    backgroundColor: '#FF3B30',
-    padding: 10,
-    borderRadius: 5,
-    marginLeft: 10,
-  },
-  rateButton: {
-    backgroundColor: '#4CD964',
-    padding: 10,
-    borderRadius: 5,
-    marginLeft: 10,
+    backgroundColor: '#ccc',
   },
   joinButtonText: {
     color: 'white',
     fontWeight: 'bold',
   },
+  deleteButton: {
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 5,
+  },
   deleteButtonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  rateButton: {
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 5,
   },
   rateButtonText: {
     color: 'white',
     fontWeight: 'bold',
   },
+  list: {
+    marginBottom: 80,
+  },
 });
 
 export default MeetupList;
-
-
 

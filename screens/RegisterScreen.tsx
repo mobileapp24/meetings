@@ -44,6 +44,7 @@ const RegisterScreen = ({ navigation }) => {
         interests: [],
         eventsAttended: [],
         eventosCreados: [],
+        profileImageUrl: null, // Add this line to store profile image URL in the future
       };
       console.log('User data prepared:', userData);
 
