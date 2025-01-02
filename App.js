@@ -1,6 +1,6 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native'; // Navigation context
+import { createStackNavigator } from '@react-navigation/stack'; // For the stack-based navigation
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -11,16 +11,16 @@ import ProfileScreen from './screens/ProfileScreen';
 import MyMeetupsScreen from './screens/MyMeetupsScreen';
 import MapScreen from './screens/MapScreen';
 
-const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator(); // Stack navigator (different sections)
+const Tab = createBottomTabNavigator(); // Tab navigator (main app)
 
+// Define the appropriate tab icon and style based on the currently active route
 const MainTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Profile') {
@@ -30,7 +30,6 @@ const MainTabs = () => {
           } else if (route.name === 'Map') {
             iconName = focused ? 'map' : 'map-outline';
           }
-
           return <Icon name={iconName} size={size} color={color} />;
         },
       })}
@@ -46,6 +45,7 @@ const MainTabs = () => {
 const App = () => {
   return (
     <NavigationContainer>
+      {/* Definition of the stack screens for authentication of the users and main app */}
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen 
           name="Login" 

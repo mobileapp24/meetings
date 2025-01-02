@@ -1,25 +1,32 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { updateProfile, createUserWithEmailAndPassword } from 'firebase/auth';
-import { setDoc, doc } from 'firebase/firestore';
-import { auth, db } from '../services/config';
-import CustomAlert from '../components/CustomAlert';
+import { updateProfile, createUserWithEmailAndPassword } from 'firebase/auth'; // Functions to authenticate and update user data
+import { setDoc, doc } from 'firebase/firestore'; // Functions to create and write documents
+import { auth, db } from '../services/config'; // Firebase configuration
+import CustomAlert from '../components/CustomAlert'; // Display messages to the user
 
 const RegisterScreen = ({ navigation }) => {
+
+  // States for storing user's inputs (email, password and name)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+
+  // States to control the alerts (visibility, title and message)
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
 
+  // Function to show a custom alert with a title and message
   const showAlert = (title: string, message: string) => {
     setAlertTitle(title);
     setAlertMessage(message);
     setAlertVisible(true);
   };
 
+  // Function to handle registration when the user presses the "Register" button
   const handleRegister = async () => {
+    // Show an alert if email, password or name fields are empty
     if (!email || !password || !name) {
       showAlert('Error', 'Please fill in all fields');
       return;
@@ -27,40 +34,44 @@ const RegisterScreen = ({ navigation }) => {
 
     try {
       console.log('Attempting to create user...');
+      // Create a user with email and password using Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       updateProfile(auth.currentUser, {
         displayName: name
       })
-      const user = userCredential.user;
+      const user = userCredential.user; // Reference to the created user
       console.log('User created successfully:', user.uid);
 
       console.log('Attempting to create user profile...');
-      const userDocRef = doc(db, 'users', user.uid);
+      const userDocRef = doc(db, 'users', user.uid); // Create a document in Firestore for the user
       console.log('User document reference created:', userDocRef);
       
       const userData = {
         name: name,
         email: email,
+        // Profile information, initially empty, about insterests and events
         interests: [],
         eventsAttended: [],
         eventosCreados: [],
       };
       console.log('User data prepared:', userData);
 
+      // Write the user data to the Firestore document
       await setDoc(userDocRef, userData);
       console.log('User profile created successfully');
 
-      showAlert('Registration Successful', 'You can now login with your new account.');
+      showAlert('Registration Successful', 'You can now login with your new account.'); // Alert in case of successful registration
     } catch (error) {
       console.error('Registration error:', error);
-      if (error.code === 'auth/email-already-in-use') {
+      if (error.code === 'auth/email-already-in-use') { // Especific errors with Firebase
         showAlert('Registration Error', 'This email is already in use. Please use a different email or login to your existing account.');
-      } else {
+      } else { // Generic error message
         showAlert('Registration Error', error.message);
       }
     }
   };
 
+  // Close the alert, redirecting the user to the login screen if the registration was successful
   const handleAlertConfirm = () => {
     setAlertVisible(false);
     if (alertTitle === 'Registration Successful') {
@@ -75,13 +86,13 @@ const RegisterScreen = ({ navigation }) => {
         style={styles.input}
         placeholder="Name"
         value={name}
-        onChangeText={setName}
+        onChangeText={setName} // Update name state when the user types
       />
       <TextInput
         style={styles.input}
         placeholder="Email"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={setEmail} // Update email state when the user types
         keyboardType="email-address"
         autoCapitalize="none"
       />
@@ -89,8 +100,8 @@ const RegisterScreen = ({ navigation }) => {
         style={styles.input}
         placeholder="Password"
         value={password}
-        onChangeText={setPassword}
-        secureTextEntry
+        onChangeText={setPassword} // Update password state when the user types
+        secureTextEntry // Mask the input for security
       />
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Register</Text>
@@ -99,6 +110,7 @@ const RegisterScreen = ({ navigation }) => {
         <Text style={styles.linkText}>Already have an account? Login</Text>
       </TouchableOpacity>
       <CustomAlert
+        // Show the alert if 'true', and pass its information (title and message)
         visible={alertVisible}
         title={alertTitle}
         message={alertMessage}
@@ -110,7 +122,7 @@ const RegisterScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1, // Make the view fill the screen
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -132,7 +144,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     padding: 10,
     borderRadius: 5,
-    width: '100%',
+    width: '100%', // Button width matches input width
     alignItems: 'center',
     marginBottom: 10,
   },

@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Button, Text, Platform, ScrollView, SafeAreaView } from 'react-native';
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
-import { db } from '../services/config';
-import MeetupList from '../components/MeetupList';
-import CreateMeetupForm from '../components/CreateMeetupForm';
-import { Meetup } from '../types/meetup';
-import { Picker } from '@react-native-picker/picker';
-import { updateMeetupStatus } from '../utils/meetupUtils';
-import { useFocusEffect } from '@react-navigation/native';
+import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'; // Utilities for querying data
+import { db } from '../services/config'; // Firebase database configuration
+import MeetupList from '../components/MeetupList'; // To display a list of meetups
+import CreateMeetupForm from '../components/CreateMeetupForm'; // Form for creating a new meetup
+import { Meetup } from '../types/meetup'; // TypeScript type definition for meetups
+import { Picker } from '@react-native-picker/picker'; // For category filtering
+import { updateMeetupStatus } from '../utils/meetupUtils'; // Tom update the status of meetups
+import { useFocusEffect } from '@react-navigation/native'; // Perform actions when the screen gains focus
 
-const categories = ['All', 'Sports', 'Study', 'Social', 'Work', 'Other'];
+const categories = ['All', 'Sports', 'Study', 'Social', 'Work', 'Other']; // Predefined to filter meetups
 
 const HomeScreen: React.FC = () => {
+  // Manage states of active, finished or filtered meetups
   const [activeMeetups, setActiveMeetups] = useState<Meetup[]>([]);
   const [finishedMeetups, setFinishedMeetups] = useState<Meetup[]>([]);
   const [filteredActiveMeetups, setFilteredActiveMeetups] = useState<Meetup[]>([]);
@@ -19,53 +20,59 @@ const HomeScreen: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  // Function to fetch meetups from Firestore based on their status 
   const fetchMeetups = useCallback(() => {
     const now = new Date();
     const activeMeetupsQuery = query(
       collection(db, 'meetups'),
-      where('isFinished', '==', false),
-      orderBy('date', 'asc')
+      where('isFinished', '==', false),  // Filter only for active meetups
+      orderBy('date', 'asc') // Order by ascending date (the closest ones appear closer)
     );
     const finishedMeetupsQuery = query(
       collection(db, 'meetups'),
-      where('isFinished', '==', true),
-      orderBy('date', 'desc')
+      where('isFinished', '==', true),  // Filter only for finished meetups
+      orderBy('date', 'desc') // Order by descending date (most recently expired meetups appear above)
     );
 
+    // Real-time updates for active meetups
     const unsubscribeActive = onSnapshot(activeMeetupsQuery, (querySnapshot) => {
       const meetupsData: Meetup[] = [];
       querySnapshot.forEach((doc) => {
-        meetupsData.push({ id: doc.id, ...doc.data() } as Meetup);
+        meetupsData.push({ id: doc.id, ...doc.data() } as Meetup);  // Map documents to the Meetup type
       });
       setActiveMeetups(meetupsData);
       setFilteredActiveMeetups(meetupsData);
     });
-
+    
+    // Real-time updates for finished meetups
     const unsubscribeFinished = onSnapshot(finishedMeetupsQuery, (querySnapshot) => {
       const meetupsData: Meetup[] = [];
       querySnapshot.forEach((doc) => {
-        meetupsData.push({ id: doc.id, ...doc.data() } as Meetup);
+        meetupsData.push({ id: doc.id, ...doc.data() } as Meetup);  // Map documents to the Meetup type
       });
       setFinishedMeetups(meetupsData);
       setFilteredFinishedMeetups(meetupsData);
     });
 
+    // Cleanup subscriptions when the component unmounts
     return () => {
       unsubscribeActive();
       unsubscribeFinished();
     };
   }, []);
 
+  // Update the status of meetups when the screen gains focus
   useFocusEffect(
     useCallback(() => {
       updateMeetupStatus().then(() => {
-        fetchMeetups();
+        fetchMeetups(); // Fetch updated meetups after statuses are updated
       });
     }, [fetchMeetups])
   );
 
+  // Filter meetups (both active and finished) based on the selected category
   useEffect(() => {
-    if (selectedCategory === 'All') {
+    if (selectedCategory === 'All') { // Show all meetups, without filtering
       setFilteredActiveMeetups(activeMeetups);
       setFilteredFinishedMeetups(finishedMeetups);
     } else {
@@ -74,12 +81,14 @@ const HomeScreen: React.FC = () => {
     }
   }, [selectedCategory, activeMeetups, finishedMeetups]);
 
+  // Handle the press action for a meetup
   const handleMeetupPress = (meetup: Meetup) => {
-    // TODO: Implement navigation to meetup details screen
     console.log('Meetup pressed:', meetup);
   };
 
+  // Render a category picker or dropdown based on the used platform (web or mobile phone)
   const renderCategoryPicker = () => {
+    // Category picker for web
     if (Platform.OS === 'web') {
       return (
         <select
@@ -92,6 +101,7 @@ const HomeScreen: React.FC = () => {
           ))}
         </select>
       );
+    // Category picker for mobile phones
     } else {
       return (
         <Picker
@@ -111,19 +121,23 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {showCreateForm ? (
-          <CreateMeetupForm />
-        ) : (
-          <ScrollView style={styles.scrollView}>
+          <CreateMeetupForm /> // Show the meetup creation formulary if selected
+        ) : ( 
+          // Otherwise, show the meetups list
+          <ScrollView style={styles.scrollView}> 
             <Text style={styles.filterLabel}>Filter by Category:</Text>
-            {renderCategoryPicker()}
+            {/* // Display the category picker */}
+            {renderCategoryPicker()} 
+
+            {/* Active Meetups */}
             <Text style={styles.sectionTitle}>Active Meetups</Text>
-            
             <MeetupList
               meetups={filteredActiveMeetups}
               onMeetupPress={handleMeetupPress}
               isFinishedList={false}
             />
             
+            {/* Finished Meetups */}
             <Text style={styles.sectionTitle}>Finished Meetups</Text>
             <MeetupList
               meetups={filteredFinishedMeetups}
@@ -132,6 +146,8 @@ const HomeScreen: React.FC = () => {
             />
           </ScrollView>
         )}
+
+        {/* Button to select the meetups list screen or the creation meetup form */}
         <View style={styles.buttonContainer}>
           <Button
             title={showCreateForm ? "Back to Meetups" : "Create New Meetup"}
