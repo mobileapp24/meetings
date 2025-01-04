@@ -52,7 +52,7 @@ const RegisterScreen = ({ navigation }) => {
         // Profile information, initially empty, about insterests and events
         interests: [],
         eventsAttended: [],
-        eventosCreados: [],
+        eventsCreated: [],
       };
       console.log('User data prepared:', userData);
 

@@ -94,7 +94,7 @@ const CreateMeetupForm: React.FC = () => {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         eventsAttended: arrayUnion(docRef.id),
-        eventosCreados: arrayUnion(docRef.id)
+        eventsCreated: arrayUnion(docRef.id)
       });
 
       showAlert('Meetup created successfully');

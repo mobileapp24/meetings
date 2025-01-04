@@ -32,14 +32,14 @@ const ProfileScreen = ({ navigation }) => {
         const userData = userDoc.data();
         setUserName(userData.name || ''); 
         setUserInterests(userData.interests || []); 
-        await fetchCreatedMeetups(user.uid, userData.eventosCreados || []); // Fetches meetups created by the user
+        await fetchCreatedMeetups(user.uid, userData.eventsCreated || []); // Fetches meetups created by the user
       }
     }
   }, []);
 
   // Fetches meetups created by the user from Firestore
-  const fetchCreatedMeetups = async (userId: string, eventosCreados: string[]) => {
-    const meetupsPromises = eventosCreados.map(meetupId => 
+  const fetchCreatedMeetups = async (userId: string, eventsCreated: string[]) => {
+    const meetupsPromises = eventsCreated.map(meetupId => 
       getDoc(doc(db, 'meetups', meetupId))
     );
     // List of promises to fetch each meetup
