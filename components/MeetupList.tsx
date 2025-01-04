@@ -80,7 +80,7 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
           <Text style={styles.meetupDetails}>
             Date: {meetupDate.toLocaleDateString()} at {formattedTime}
           </Text>
-          <Text style={styles.meetupDetails}>Location: {item.location}</Text>
+          <Text style={styles.meetupDetails}>Location: {item.address}</Text>
           <Text style={styles.meetupDetails}>
             Participants: {item.participants ? item.participants.length : 0}/{item.maxParticipants}
           </Text>
@@ -221,6 +221,3 @@ const styles = StyleSheet.create({
 });
 
 export default MeetupList;
-
-
-

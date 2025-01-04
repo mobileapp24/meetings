@@ -1,143 +1,108 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Button, Text, Platform, ScrollView, SafeAreaView } from 'react-native';
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore'; // Utilities for querying data
-import { db } from '../services/config'; // Firebase database configuration
-import MeetupList from '../components/MeetupList'; // To display a list of meetups
-import CreateMeetupForm from '../components/CreateMeetupForm'; // Form for creating a new meetup
-import { Meetup } from '../types/meetup'; // TypeScript type definition for meetups
-import { Picker } from '@react-native-picker/picker'; // For category filtering
-import { updateMeetupStatus } from '../utils/meetupUtils'; // Tom update the status of meetups
-import { useFocusEffect } from '@react-navigation/native'; // Perform actions when the screen gains focus
+import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { db } from '../services/config';
+import MeetupList from '../components/MeetupList';
+import CreateMeetupForm from '../components/CreateMeetupForm';
+import { Meetup } from '../types/meetup';
+import { Picker } from '@react-native-picker/picker';
+import { updateMeetupStatus } from '../utils/meetupUtils';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-const categories = ['All', 'Sports', 'Study', 'Social', 'Work', 'Other']; // Predefined to filter meetups
+type RootStackParamList = {
+  MeetupDetail: { meetupId: string };
+};
+
+const categories = ['All', 'Sports', 'Study', 'Social', 'Work', 'Other'];
 
 const HomeScreen: React.FC = () => {
-  // Manage states of active, finished or filtered meetups
   const [activeMeetups, setActiveMeetups] = useState<Meetup[]>([]);
   const [finishedMeetups, setFinishedMeetups] = useState<Meetup[]>([]);
   const [filteredActiveMeetups, setFilteredActiveMeetups] = useState<Meetup[]>([]);
   const [filteredFinishedMeetups, setFilteredFinishedMeetups] = useState<Meetup[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Function to fetch meetups from Firestore based on their status 
-  const fetchMeetups = useCallback(() => {
-    const now = new Date();
-    const activeMeetupsQuery = query(
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
+  const fetchMeetups = useCallback(async () => {
+    setLoading(true);
+    const q = query(
       collection(db, 'meetups'),
-      where('isFinished', '==', false),  // Filter only for active meetups
-      orderBy('date', 'asc') // Order by ascending date (the closest ones appear closer)
-    );
-    const finishedMeetupsQuery = query(
-      collection(db, 'meetups'),
-      where('isFinished', '==', true),  // Filter only for finished meetups
-      orderBy('date', 'desc') // Order by descending date (most recently expired meetups appear above)
+      orderBy('date', 'asc')
     );
 
-    // Real-time updates for active meetups
-    const unsubscribeActive = onSnapshot(activeMeetupsQuery, (querySnapshot) => {
-      const meetupsData: Meetup[] = [];
-      querySnapshot.forEach((doc) => {
-        meetupsData.push({ id: doc.id, ...doc.data() } as Meetup);  // Map documents to the Meetup type
-      });
-      setActiveMeetups(meetupsData);
-      setFilteredActiveMeetups(meetupsData);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const meetupsData: Meetup[] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data() as Meetup,
+      }));
+      setActiveMeetups(meetupsData.filter((meetup) => !meetup.isFinished));
+      setFinishedMeetups(meetupsData.filter((meetup) => meetup.isFinished));
+      setLoading(false);
     });
-    
-    // Real-time updates for finished meetups
-    const unsubscribeFinished = onSnapshot(finishedMeetupsQuery, (querySnapshot) => {
-      const meetupsData: Meetup[] = [];
-      querySnapshot.forEach((doc) => {
-        meetupsData.push({ id: doc.id, ...doc.data() } as Meetup);  // Map documents to the Meetup type
-      });
-      setFinishedMeetups(meetupsData);
-      setFilteredFinishedMeetups(meetupsData);
-    });
-
-    // Cleanup subscriptions when the component unmounts
-    return () => {
-      unsubscribeActive();
-      unsubscribeFinished();
-    };
+    return unsubscribe;
   }, []);
 
-  // Update the status of meetups when the screen gains focus
+  useEffect(() => {
+    const unsubscribe = fetchMeetups();
+    return () => unsubscribe();
+  }, [fetchMeetups]);
+
+  useEffect(() => {
+    const filteredActive = selectedCategory === 'All'
+      ? activeMeetups
+      : activeMeetups.filter((meetup) => meetup.category === selectedCategory);
+    const filteredFinished = selectedCategory === 'All'
+      ? finishedMeetups
+      : finishedMeetups.filter((meetup) => meetup.category === selectedCategory);
+    setFilteredActiveMeetups(filteredActive);
+    setFilteredFinishedMeetups(filteredFinished);
+  }, [activeMeetups, finishedMeetups, selectedCategory]);
+
   useFocusEffect(
     useCallback(() => {
       updateMeetupStatus().then(() => {
-        fetchMeetups(); // Fetch updated meetups after statuses are updated
+        fetchMeetups();
       });
     }, [fetchMeetups])
   );
 
-  // Filter meetups (both active and finished) based on the selected category
-  useEffect(() => {
-    if (selectedCategory === 'All') { // Show all meetups, without filtering
-      setFilteredActiveMeetups(activeMeetups);
-      setFilteredFinishedMeetups(finishedMeetups);
-    } else {
-      setFilteredActiveMeetups(activeMeetups.filter(meetup => meetup.category === selectedCategory));
-      setFilteredFinishedMeetups(finishedMeetups.filter(meetup => meetup.category === selectedCategory));
-    }
-  }, [selectedCategory, activeMeetups, finishedMeetups]);
-
-  // Handle the press action for a meetup
   const handleMeetupPress = (meetup: Meetup) => {
-    console.log('Meetup pressed:', meetup);
+    navigation.navigate('MeetupDetail', { meetupId: meetup.id });
   };
 
-  // Render a category picker or dropdown based on the used platform (web or mobile phone)
-  const renderCategoryPicker = () => {
-    // Category picker for web
-    if (Platform.OS === 'web') {
-      return (
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          style={styles.webSelect}
-        >
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
-      );
-    // Category picker for mobile phones
-    } else {
-      return (
-        <Picker
-          selectedValue={selectedCategory}
-          onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-          style={styles.picker}
-        >
-          {categories.map((cat) => (
-            <Picker.Item key={cat} label={cat} value={cat} />
-          ))}
-        </Picker>
-      );
-    }
-  };
+  const renderCategoryPicker = () => (
+    <Picker
+      selectedValue={selectedCategory}
+      style={{ height: 50, width: 150 }}
+      onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+    >
+      {categories.map((category) => (
+        <Picker.Item key={category} label={category} value={category} />
+      ))}
+    </Picker>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {showCreateForm ? (
-          <CreateMeetupForm /> // Show the meetup creation formulary if selected
-        ) : ( 
-          // Otherwise, show the meetups list
-          <ScrollView style={styles.scrollView}> 
+          <CreateMeetupForm onComplete={() => setShowCreateForm(false)} />
+        ) : (
+          <ScrollView style={styles.scrollView}>
             <Text style={styles.filterLabel}>Filter by Category:</Text>
-            {/* // Display the category picker */}
-            {renderCategoryPicker()} 
+            {renderCategoryPicker()}
 
-            {/* Active Meetups */}
             <Text style={styles.sectionTitle}>Active Meetups</Text>
             <MeetupList
               meetups={filteredActiveMeetups}
               onMeetupPress={handleMeetupPress}
               isFinishedList={false}
             />
-            
-            {/* Finished Meetups */}
+
             <Text style={styles.sectionTitle}>Finished Meetups</Text>
             <MeetupList
               meetups={filteredFinishedMeetups}
@@ -147,7 +112,6 @@ const HomeScreen: React.FC = () => {
           </ScrollView>
         )}
 
-        {/* Button to select the meetups list screen or the creation meetup form */}
         <View style={styles.buttonContainer}>
           <Button
             title={showCreateForm ? "Back to Meetups" : "Create New Meetup"}
@@ -162,53 +126,27 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#f9fafb',
   },
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fffff',
   },
   scrollView: {
     flex: 1,
   },
   filterLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 10,
   },
   sectionTitle: {
-    backgroundColor: '#f3f4f6',
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#374151',
     marginTop: 20,
-    borderRadius: 12,
-  },
-  picker: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
     marginBottom: 10,
-  },
-  webSelect: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    width: '100%',
   },
   buttonContainer: {
-    marginTop: 10,
+    marginTop: 20,
   },
 });
 
 export default HomeScreen;
-
-

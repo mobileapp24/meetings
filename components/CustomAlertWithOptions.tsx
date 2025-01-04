@@ -40,7 +40,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
               style={[styles.button, styles.confirmButton]}
               onPress={onConfirm} 
             >
-              <Text style={styles.buttonText}>Sí</Text>
+              <Text style={styles.buttonText}>Yes</Text>
             </TouchableOpacity>
             {/* Conditionally render the cancel button */}
             {showCancelButton && (

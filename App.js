@@ -10,9 +10,39 @@ import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import MyMeetupsScreen from './screens/MyMeetupsScreen';
 import MapScreen from './screens/MapScreen';
+import MeetupDetailScreen from './screens/MeetupDetailScreen';
+import UserProfileScreen from './screens/UserProfileScreen';
 
 const Stack = createStackNavigator(); // Stack navigator (different sections)
 const Tab = createBottomTabNavigator(); // Tab navigator (main app)
+
+
+// Define a home stack to be able to navigate with the main bar also from these screens
+const HomeStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen 
+      name="HomeMain" 
+      component={HomeScreen} 
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen 
+      name="MeetupDetail" 
+      component={MeetupDetailScreen} 
+      options={{ headerTitle: 'Meetup Details' }}
+    />
+    <Stack.Screen 
+      name="Profile" 
+      component={ProfileScreen} 
+      options={{ headerTitle: 'Profile' }}
+    />
+    <Stack.Screen 
+      name="UserProfile" 
+      component={UserProfileScreen} 
+      options={{ headerTitle: 'User Profile' }}
+    />
+  </Stack.Navigator>
+);
+
 
 // Define the appropriate tab icon and style based on the currently active route
 const MainTabs = () => {
@@ -34,7 +64,7 @@ const MainTabs = () => {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="My Meetups" component={MyMeetupsScreen} />
       <Tab.Screen name="Map" component={MapScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
@@ -68,4 +98,3 @@ const App = () => {
 };
 
 export default App;
-
