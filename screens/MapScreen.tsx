@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
-import { collection, query, getDocs } from 'firebase/firestore';  // Utilities for querying data
+import { collection, query, getDocs, where, Timestamp } from 'firebase/firestore';  // Utilities for querying data
 import { db } from '../services/config'; // Firebase database configuration
 import {APIProvider, Map, MapCameraChangedEvent, Marker  } from '@vis.gl/react-google-maps';
 
@@ -13,6 +13,7 @@ interface Meeting {
     latitude: number;
     longitude: number;
   };
+  date: string | Date;
 }
 
 
@@ -22,23 +23,22 @@ const MapScreen: React.FC = () => {
   useEffect(() => {
     const fetchMeetings = async () => {
       try {
-        // Firestore query to obtain the 'meetups' collection
+        // Firestore query to obtain the 'active meetups' collection
+        const now = new Date();
         const q = query(collection(db, 'meetups'));
         const querySnapshot = await getDocs(q);
         const meetingsData: Meeting[] = [];
         querySnapshot.forEach((doc) => {
-          const data = doc.data();
+          const data = doc.data() as Meeting;
           // Only include meetings with valid coordinates
           if (data.coordinates?.latitude && data.coordinates?.longitude) {
-            meetingsData.push({
-              id: doc.id,
-              title: data.title,
-              description: data.description,
-              coordinates: {
-                latitude: data.coordinates.latitude,
-                longitude: data.coordinates.longitude,
-              },
-            });
+            const meetingDate = new Date(data.date);
+            if (meetingDate > now) {
+              meetingsData.push({
+                id: doc.id,
+                ...data,
+              });
+            }
           }
         });
         setMeetings(meetingsData); // Update state with previously fetched meetings
