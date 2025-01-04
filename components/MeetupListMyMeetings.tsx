@@ -198,7 +198,7 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress, isFin
           {/* Display meetup's basic information */}
           <Text style={styles.meetupTitle}>{meetup.title}</Text>
           <Text style={styles.meetupDetails}>Date: {meetupDate.toLocaleString()}</Text>
-          <Text style={styles.meetupDetails}>Location: {meetup.location}</Text>
+          <Text style={styles.meetupDetails}>Location: {meetup.address}</Text>
           <Text style={styles.meetupDetails}>
            Participants: {meetup.participants ? meetup.participants.length : 0}/{meetup.maxParticipants}
           </Text>

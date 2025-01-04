@@ -5,7 +5,7 @@ export interface Meetup {
   id: string; //unique identifier for the meetup
   title: string;
   description: string;
-  location: string;
+  address: string;
   coordinates: GeoPoint;
   date: string; // Event date in ISO format
   maxParticipants: number;
