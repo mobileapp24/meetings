@@ -1,48 +1,57 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, FlatList } from 'react-native';
 
+// Properties for the Edit interests modal component 
+// (list of interests, whether it is visible, saving and canceling updated interests)
 interface EditInterestsModalProps {
-  visible: boolean;
-  interests: string[];
-  onSave: (interests: string[]) => void;
-  onCancel: () => void;
+  visible: boolean; 
+  interests: string[]; 
+  onSave: (interests: string[]) => void; 
+  onCancel: () => void; 
 }
 
 const EditInterestsModal: React.FC<EditInterestsModalProps> = ({ visible, interests, onSave, onCancel }) => {
-  const [newInterests, setNewInterests] = useState<string[]>(interests);
-  const [newInterest, setNewInterest] = useState('');
+  const [newInterests, setNewInterests] = useState<string[]>(interests); // State for the list of interests
+  const [newInterest, setNewInterest] = useState(''); // State for the new interest input field
 
+  // Adds a new interest to the list if it is not empty and if it doesn't already exist
   const addInterest = () => {
     if (newInterest.trim() !== '' && !newInterests.includes(newInterest.trim())) {
       setNewInterests([...newInterests, newInterest.trim()]);
-      setNewInterest('');
+      setNewInterest(''); // Clear the input field after adding it
     }
   };
 
+  // Removes an interest from the list
   const removeInterest = (interest: string) => {
     setNewInterests(newInterests.filter(i => i !== interest));
   };
 
+  // Saves the updated list of interests (calling property "onSave" with the updated interests)
   const handleSave = () => {
-    onSave(newInterests);
+    onSave(newInterests); 
   };
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
+      {/* Modal background with centered content */}
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
           <Text style={styles.modalTitle}>Edit Interests</Text>
+          {/* Input field and button for adding a new interest */}
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
               value={newInterest}
-              onChangeText={setNewInterest}
+              onChangeText={setNewInterest} // Updates the new interest when the user types
               placeholder="Add new interest"
             />
             <TouchableOpacity style={styles.addButton} onPress={addInterest}>
               <Text style={styles.addButtonText}>Add</Text>
             </TouchableOpacity>
           </View>
+
+          {/* List of current interests with an option to remove each individual item */}
           <FlatList
             data={newInterests}
             renderItem={({ item }) => (
@@ -56,10 +65,13 @@ const EditInterestsModal: React.FC<EditInterestsModalProps> = ({ visible, intere
             keyExtractor={(item, index) => index.toString()}
             style={styles.interestsList}
           />
+
           <View style={styles.buttonContainer}>
+            {/* Button for canceling changes */}
             <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onCancel}>
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
+            {/* Button for saving changes */}
             <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={handleSave}>
               <Text style={styles.buttonText}>Save</Text>
             </TouchableOpacity>
