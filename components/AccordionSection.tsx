@@ -1,33 +1,42 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, LayoutAnimation, Platform, UIManager } from 'react-native';
 
+// Enable LayoutAnimation on Android (if the experimental flag is available), ensuring animations work smoothly
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
+// Properties of the AccordionSection
 interface AccordionSectionProps {
   title: string;
-  children: React.ReactNode;
+  children: React.ReactNode; //content rendered inside the accordion (expanded)
 }
 
+// Component that renders a section with expandable content
 const AccordionSection: React.FC<AccordionSectionProps> = ({ title, children }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false); // State that determunes whether the content is visible
 
+  // Function to change the expansion state
   const toggleExpand = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); // next layout animation
     setIsExpanded(!isExpanded);
   };
 
   return (
     <View style={styles.container}>
+      {/* Header: toggles the expansion when pressed */}
       <TouchableOpacity style={styles.header} onPress={toggleExpand}>
         <Text style={styles.headerText}>{title}</Text>
+        {/* Displays an arrow icon that changes based on the expansion state */}
         <Text style={styles.expandIcon}>{isExpanded ? '▲' : '▼'}</Text>
       </TouchableOpacity>
+
+      {/* Render content if expanded */}
       {isExpanded && <View style={styles.content}>{children}</View>}
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

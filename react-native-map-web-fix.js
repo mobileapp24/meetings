@@ -1,3 +1,5 @@
+// Fixes a compatibility issue between the react-native-maps library and web environments, 
+// as that library is not specifically designed to run on web without previous modifications
 const chalk = require('chalk');
 const { readFile, writeFile, copyFile } = require('fs').promises;
 console.log(chalk.green('here'));
