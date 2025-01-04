@@ -6,7 +6,7 @@ import MeetupList from '../components/MeetupList'; // To display a list of meetu
 import CreateMeetupForm from '../components/CreateMeetupForm'; // Form for creating a new meetup
 import { Meetup } from '../types/meetup'; // TypeScript type definition for meetups
 import { Picker } from '@react-native-picker/picker'; // For category filtering
-import { updateMeetupStatus } from '../utils/meetupUtils'; // Tom update the status of meetups
+import { updateMeetupStatus } from '../utils/meetupUtils'; // To update the status of meetups
 import { useFocusEffect } from '@react-navigation/native'; // Perform actions when the screen gains focus
 
 const categories = ['All', 'Sports', 'Study', 'Social', 'Work', 'Other']; // Predefined to filter meetups

@@ -134,19 +134,6 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  // Renders a single meetup item in the list of created meetups
-  const renderMeetupItem = (meetup: Meetup) => (
-    <View style={styles.meetupItem} key={meetup.id}>
-      <Text style={styles.meetupTitle}>{meetup.title}</Text>
-      <Text style={styles.meetupDetails}>{new Date(meetup.date).toLocaleDateString()}</Text> {/* Formats the date */}
-      <Text style={styles.meetupDetails}>{meetup.location}</Text>
-      <Text style={styles.meetupCategory}>Category: {meetup.category}</Text>
-      <Text style={styles.meetupRating}>
-        Average Rating: {meetup.averageRating ? meetup.averageRating.toFixed(1) : 'Not rated'}
-      </Text>
-    </View>
-  );
-
   return (
     <ScrollView style={styles.container}>
       {/* Display user's information */}
@@ -242,40 +229,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: '#666',
   },
-  meetupsScrollView: {
-    maxHeight: 200,
-    marginBottom: 20,
-  },
-  meetupItem: {
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-  },
-  meetupTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  meetupDetails: {
-    fontSize: 14,
-    color: '#666',
-  },
-  meetupCategory: {
-    fontSize: 14,
-    color: '#007AFF',
-    marginTop: 5,
-  },
-  meetupRating: {
-    fontSize: 14,
-    color: '#007AFF',
-    marginTop: 5,
-  },
-  emptyMeetups: {
-    fontSize: 16,
-    fontStyle: 'italic',
-    color: '#666',
-  },
   button: {
     backgroundColor: '#007AFF',
     padding: 10,
@@ -294,8 +247,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
-
-
-
-
-
