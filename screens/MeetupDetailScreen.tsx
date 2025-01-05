@@ -9,7 +9,7 @@ import CustomAlert from '../components/CustomAlert';
 
 type RootStackParamList = {
   Profile: undefined;
-  OtherUserProfile: { userId: string };
+  UserProfile: { userId: string };
 };
 
 type MeetupDetailScreenProps = {
@@ -65,7 +65,7 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
     if (currentUser && userId === currentUser.uid) {
       navigation.navigate('MainApp', {screen: 'Profile'});
     } else {
-      navigation.navigate('OtherUserProfile', { userId });
+      navigation.navigate('UserProfile', { userId });
     }
   };
 
