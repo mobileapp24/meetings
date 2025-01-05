@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { db, auth } from '../services/config';
 import { Meetup } from '../types/meetup';
+import CustomAlert from '../components/CustomAlert';
 
 type RootStackParamList = {
-  MainApp: undefined; // Representa las tabs principales
-  UserProfile: { userId: string };
+  Profile: undefined;
+  OtherUserProfile: { userId: string };
 };
 
 type MeetupDetailScreenProps = {
@@ -24,6 +25,14 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
   const [participants, setParticipants] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const currentUser = auth.currentUser;
+  const isUserInMeetup = currentUser && meetup?.participants.includes(currentUser.uid);
+  const isMeetupFull = meetup?.participants?.length >= meetup?.maxParticipants || false;
+
 
   useEffect(() => {
     const fetchMeetupDetails = async () => {
@@ -32,7 +41,8 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
         if (meetupDoc.exists()) {
           const meetupData = { id: meetupDoc.id, ...meetupDoc.data() } as Meetup;
           setMeetup(meetupData);
-
+          
+          // Fetch participant names
           const participantPromises = meetupData.participants.map(async (userId) => {
             const userDoc = await getDoc(doc(db, 'users', userId));
             return { id: userId, name: userDoc.data()?.name || 'Unknown User' };
@@ -53,10 +63,16 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
   const handleParticipantPress = (userId: string) => {
     const currentUser = auth.currentUser;
     if (currentUser && userId === currentUser.uid) {
-      navigation.navigate('MainApp', { screen: 'Profile' });
+      navigation.navigate('MainApp', {screen: 'Profile'});
     } else {
-      navigation.navigate('UserProfile', { userId });
+      navigation.navigate('OtherUserProfile', { userId });
     }
+  };
+
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
   };
 
   const handleJoinLeaveMeetup = async () => {
@@ -70,14 +86,22 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
       if (meetup.participants.includes(user.uid)) {
         await updateDoc(meetupRef, { participants: arrayRemove(user.uid) });
         await updateDoc(userRef, { eventsAttended: arrayRemove(meetup.id) });
-        setMeetup({ ...meetup, participants: meetup.participants.filter((id) => id !== user.uid) });
+        setMeetup({ ...meetup, participants: meetup.participants.filter(id => id !== user.uid) });
+        setParticipants(participants.filter(p => p.id !== user.uid));
+        showAlert('Success', 'Left meetup successfully');
       } else if (meetup.participants.length < meetup.maxParticipants) {
         await updateDoc(meetupRef, { participants: arrayUnion(user.uid) });
         await updateDoc(userRef, { eventsAttended: arrayUnion(meetup.id) });
         setMeetup({ ...meetup, participants: [...meetup.participants, user.uid] });
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        setParticipants([...participants, { id: user.uid, name: userDoc.data()?.name || 'Unknown User' }]);
+        showAlert('Success', 'Joined meetup successfully');
+      } else {
+        showAlert('Info', 'Meetup is full');
       }
     } catch (error) {
       console.error('Error updating meetup participation:', error);
+      showAlert('Error', 'Failed to update meetup participation. Please try again.');
     }
   };
 
@@ -97,26 +121,16 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
     );
   }
 
-  const currentUser = auth.currentUser;
-  const isUserInMeetup = currentUser && meetup.participants.includes(currentUser.uid);
-  const isMeetupFull = meetup.participants.length >= meetup.maxParticipants;
-
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>{meetup.title}</Text>
-      <Text style={styles.meetupCategory}>Category: {meetup.category}</Text>
+      <Text style={styles.detail}>Category: {meetup.category}</Text>
       <Text style={styles.detail}>Description: {meetup.description}</Text>
       <Text style={styles.detail}>Date: {new Date(meetup.date).toLocaleString()}</Text>
       <Text style={styles.detail}>Location: {meetup.address}</Text>
       <Text style={styles.detail}>Created by: {meetup.creatorName}</Text>
       <Text style={styles.detail}>Participants: {participants.length}/{meetup.maxParticipants}</Text>
-
-      {meetup.isFinished && (
-        <Text style={styles.detail}>
-          Average Rating: {meetup.averageRating ? meetup.averageRating.toFixed(1) : 'Not rated'}
-        </Text>
-      )}
-
+      
       {!meetup.isFinished && (
         <TouchableOpacity
           style={[
@@ -132,6 +146,12 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
         </TouchableOpacity>
       )}
 
+      {meetup.isFinished && (
+        <Text style={styles.detail}>
+          Average Rating: {meetup.averageRating ? meetup.averageRating.toFixed(1) : 'Not rated'}
+        </Text>
+      )}
+
       <Text style={styles.subtitle}>Participants:</Text>
       {participants.map((participant) => (
         <TouchableOpacity
@@ -142,6 +162,12 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
           <Text>{participant.name}</Text>
         </TouchableOpacity>
       ))}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onConfirm={() => setAlertVisible(false)}
+      />
     </ScrollView>
   );
 };
@@ -155,11 +181,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  meetupCategory: {
-    fontSize: 18,
-    color: '#007AFF',
-    marginBottom: 10,
   },
   title: {
     fontSize: 24,

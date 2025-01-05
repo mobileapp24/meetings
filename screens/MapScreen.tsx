@@ -63,11 +63,11 @@ const MapScreen: React.FC = () => {
                }>
               {/* Add markers for each meeting */}
               {meetings.map((meeting) => (
-                <Marker
-                    key={meeting.id}
-                    position={{lat:meeting.coordinates.latitude, lng: meeting.coordinates.longitude}}
-                    title={meeting.title}
-                  />
+                  <Marker
+                      key={meeting.id}
+                      position={{lat:meeting.coordinates.latitude, lng: meeting.coordinates.longitude}}
+                      title={meeting.title}
+                    />
               ))}
            </Map>
          </APIProvider>
@@ -99,12 +99,12 @@ const MapScreen: React.FC = () => {
       >
         {/* Add markers for each meeting */}
         {meetings.map((meeting) => (
-          <Marker
-            key={meeting.id}
-            coordinate={meeting.coordinates}
-            title={meeting.title}
-            description={meeting.description}
-          />
+            <Marker
+              key={meeting.id}
+              coordinate={meeting.coordinates}
+              title={meeting.title}
+              description={meeting.description}
+            />
         ))}
       </MapView>
     </View>
