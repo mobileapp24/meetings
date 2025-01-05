@@ -5,14 +5,14 @@ import { auth, db } from '../services/config'; // Firebase authentication and da
 import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, arrayRemove, arrayUnion, getDoc } from 'firebase/firestore'; // Firebase Firestore utilities
 import RateMeetupModal from './RateMeetupModal';
 import AccordionSection from './AccordionSection';
+import CustomAlert from './CustomAlert';
 
 // Properties for the component
 interface MeetupMyMeetingsProps {
   onMeetupPress: (meetup: Meetup) => void;
-  isFinishedList: boolean;
 }
 
-const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress, isFinishedList }) => {
+const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress }) => {
   // State management for meetups
   const [upcomingMeetups, setUpcomingMeetups] = useState<Meetup[]>([]);
   const [pastMeetups, setPastMeetups] = useState<Meetup[]>([]);
@@ -20,6 +20,15 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress, isFin
   const [selectedMeetup, setSelectedMeetup] = useState<Meetup | null>(null);
   // State management for modal visibility
   const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
 
   // Function to categorize meetups as upcoming or past
   const updateMeetupLists = useCallback((meetups: Meetup[]) => {
@@ -90,6 +99,7 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress, isFin
         await updateDoc(meetupRef, {
           participants: arrayRemove(user.uid)
         });
+        showAlert('Success', 'Left meetup successfully');
         await updateDoc(userRef, {
           eventsAttended: arrayRemove(meetup.id),
           activeParticipateEvents: arrayRemove(meetup.id)
@@ -102,6 +112,7 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress, isFin
         await updateDoc(meetupRef, {
           participants: arrayUnion(user.uid)
         });
+        showAlert('Success', 'Joined meetup successfully');
         await updateDoc(userRef, {
           eventsAttended: arrayUnion(meetup.id),
           activeParticipateEvents: arrayUnion(meetup.id)
@@ -138,7 +149,7 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress, isFin
         setUpcomingMeetups(prev => prev.filter(m => m.id !== meetupId));
         setPastMeetups(prev => prev.filter(m => m.id !== meetupId));
         setCreatedMeetups(prev => prev.filter(m => m.id !== meetupId));
-
+        showAlert('Success', 'Meetup deleted successfully');
         console.log('Meetup deleted successfully and removed from all participants');
       } else {
         console.log('Meetup not found');
@@ -199,6 +210,7 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress, isFin
           <Text style={styles.meetupTitle}>{meetup.title}</Text>
           <Text style={styles.meetupDetails}>Date: {meetupDate.toLocaleString()}</Text>
           <Text style={styles.meetupDetails}>Location: {meetup.address}</Text>
+          <Text style={styles.meetupDetails}>Latitude: {meetup.coordinates.latitude}</Text>
           <Text style={styles.meetupDetails}>
            Participants: {meetup.participants ? meetup.participants.length : 0}/{meetup.maxParticipants}
           </Text>
@@ -286,6 +298,13 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress, isFin
         onClose={() => setIsRatingModalVisible(false)}
         onSubmit={handleRatingSubmit}
       />
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onConfirm={() => setAlertVisible(false)}
+      />
     </ScrollView>
   );
 };
@@ -364,4 +383,3 @@ const styles = StyleSheet.create({
 });
 
 export default MeetupMyMeetings;
-

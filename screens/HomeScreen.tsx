@@ -47,11 +47,6 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = fetchMeetups();
-    return () => unsubscribe();
-  }, [fetchMeetups]);
-
-  useEffect(() => {
     const filteredActive = selectedCategory === 'All'
       ? activeMeetups
       : activeMeetups.filter((meetup) => meetup.category === selectedCategory);

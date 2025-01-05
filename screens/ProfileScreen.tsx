@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { signOut, deleteUser } from 'firebase/auth';
-import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, writeBatch, query, collection, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../services/config';
 import CustomAlert from '../components/CustomAlertWithOptions';
 import EditInterestsModal from '../components/EditInterestsModal';
@@ -96,18 +96,47 @@ const ProfileScreen = ({ navigation }) => {
       true);
   }; 
 
+  const deleteUserMeetups = async (userId: string) => {
+    try {
+      const userMeetupsQuery = query(collection(db, 'meetups'), where('creatorId', '==', userId));
+      const userMeetupsDocs = await getDocs(userMeetupsQuery);
+      
+      const batch = writeBatch(db);
+      userMeetupsDocs.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      
+      await batch.commit();
+      console.log('All user meetups deleted successfully');
+    } catch (error) {
+      console.error('Error deleting user meetups:', error);
+      throw error;
+    }
+  };
+  
   // Deletes the user's account from Firestore and Firebase Auth and redirects to the login screen
   const performDeleteUser = async () => {
     try {
-      const user = auth.currentUser; // Gets the current logged-in user
+      const user = auth.currentUser;
       if (user) {
-        await deleteDoc(doc(db, 'users', user.uid)); // Deletes the user document from Firestore
-        await deleteUser(user); // Deletes the user from Firebase Auth
-        navigation.replace('Login'); 
+        // Delete all meetups created by the user
+        await deleteUserMeetups(user.uid);
+
+        // Delete the user document
+        await deleteDoc(doc(db, 'users', user.uid));
+
+        // Delete the user from Firebase Auth
+        await deleteUser(user);
+
+        navigation.replace('Login');
       }
     } catch (error) {
-      console.error('Delete user error:', error); 
-      showAlert('Error', 'Failed to delete account. Please try again.'); 
+      console.error('Delete user error:', error);
+      if (error instanceof Error) {
+        showAlert('Error', `Failed to delete account: ${error.message}`);
+      } else {
+        showAlert('Error', 'Failed to delete account. Please try again.');
+      }
     }
   };
 

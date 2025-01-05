@@ -14,10 +14,8 @@ const MyMeetingsV2: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Displaying active meetups (not finished) */}
-        <MeetupMyMeetings onMeetupPress={handleMeetupPress} isFinishedList={false} />
-        {/* Displaying finished meetups */}
-        <MeetupMyMeetings onMeetupPress={handleMeetupPress} isFinishedList={true} />
+        {/* Displaying active and finished meetups */}
+        <MeetupMyMeetings onMeetupPress={handleMeetupPress} />
       </View>
     </SafeAreaView>
   );
