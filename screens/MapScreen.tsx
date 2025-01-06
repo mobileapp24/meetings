@@ -101,7 +101,10 @@ const MapScreen: React.FC = () => {
         {meetings.map((meeting) => (
             <Marker
               key={meeting.id}
-              coordinate={meeting.coordinates}
+              coordinate={{
+                latitude: meeting.coordinates.latitude,
+                longitude: meeting.coordinates.longitude,
+              }}
               title={meeting.title}
               description={meeting.description}
             />

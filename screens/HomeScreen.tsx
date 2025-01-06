@@ -85,7 +85,7 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {showCreateForm ? (
-          <CreateMeetupForm onComplete={() => setShowCreateForm(false)} />
+          <CreateMeetupForm/>
         ) : (
           <ScrollView style={styles.scrollView}>
             <Text style={styles.filterLabel}>Filter by Category:</Text>
