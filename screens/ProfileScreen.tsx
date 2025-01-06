@@ -55,7 +55,7 @@ const ProfileScreen = ({ navigation }) => {
 
   // Calculates the average rating of the user's finished meetups
   const averageRating = useMemo(() => {
-    const finishedMeetups = createdMeetups.filter(meetup => meetup.isFinished && averageRating>0); // Filters only finished meetups
+    const finishedMeetups = createdMeetups.filter(meetup => meetup.isFinished && meetup.averageRating>0); // Filters only finished meetups
     if (finishedMeetups.length === 0) return 0; // If no meetups are finished
     const totalRating = finishedMeetups.reduce((sum, meetup) => sum + (meetup.averageRating || 0), 0);
     // Total rating of finished meetups (average)

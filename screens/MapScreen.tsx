@@ -75,7 +75,7 @@ const MapScreen: React.FC = () => {
                       key={meeting.id}
                       position={{lat:meeting.coordinates.latitude, lng: meeting.coordinates.longitude}}
                       title={meeting.title}
-                      onClick ={()=> { console.log('navigation'), navigation.navigate('MeetupDetail', { meetupId: meeting.id });}}
+                      onClick ={()=> {  navigation.navigate('MeetupDetail', { meetupId: meeting.id })}}
                     />
               ))}
            </Map>
@@ -117,10 +117,8 @@ const MapScreen: React.FC = () => {
               }}
               title={meeting.title}
               description={meeting.description}
+              onPress = {()=>{ navigation.navigate('MeetupDetail', { meetupId: meeting.id })}}
             >
-           
-            
-            
             </Marker>
               
         ))}

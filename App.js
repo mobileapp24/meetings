@@ -68,6 +68,27 @@ const MyMeetupsStack = () => (
   </Stack.Navigator>
 );
 
+const MapStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen 
+      name="Map" 
+      component={MapScreen} 
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen 
+      name="MeetupDetail" 
+      component={MeetupDetailScreen} 
+      options={{ headerTitle: 'Meetup Details' }}
+    />
+    <Stack.Screen 
+      name="UserProfile" 
+      component={UserProfileScreen} 
+      options={{ headerTitle: 'User Profile' }}
+    />
+    
+  </Stack.Navigator>
+  );
+
 
 // Define the appropriate tab icon and style based on the currently active route
 const MainTabs = () => {
@@ -91,7 +112,7 @@ const MainTabs = () => {
     >
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="My Meetups" component={MyMeetupsStack} />
-      <Tab.Screen name="Map" component={MapScreen} />
+      <Tab.Screen name="Map" component={MapStack} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
