@@ -272,6 +272,7 @@ const CreateMeetupForm: React.FC = () => {
             }}
           >
             {coordinates && (
+                console.log('coordinate marker'),
               <Marker
                 coordinate={{
                   latitude: coordinates.latitude,
