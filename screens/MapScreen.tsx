@@ -3,7 +3,14 @@ import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
 import { collection, query, getDocs, where, Timestamp } from 'firebase/firestore';  // Utilities for querying data
 import { db } from '../services/config'; // Firebase database configuration
 import {APIProvider, Map, MapCameraChangedEvent, Marker  } from '@vis.gl/react-google-maps';
+import { Callout } from 'react-native-maps';
 
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+  MeetupDetail: { meetupId: string };
+};
 // Structure of a meeting object:
 interface Meeting {
   id: string;
@@ -19,6 +26,7 @@ interface Meeting {
 
 const MapScreen: React.FC = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]); // State to store meetings
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   // Fetch meetings from Firestore 
   useEffect(() => {
     const fetchMeetings = async () => {
@@ -67,6 +75,7 @@ const MapScreen: React.FC = () => {
                       key={meeting.id}
                       position={{lat:meeting.coordinates.latitude, lng: meeting.coordinates.longitude}}
                       title={meeting.title}
+                      onClick ={()=> {  navigation.navigate('MeetupDetail', { meetupId: meeting.id })}}
                     />
               ))}
            </Map>
@@ -81,6 +90,7 @@ const MapScreen: React.FC = () => {
     const Maps = require('react-native-maps');
     MapView = Maps.default;
     Marker = Maps.Marker;
+
   // Render for mobile platforms
   return (
     <View style={styles.container}>
@@ -101,10 +111,16 @@ const MapScreen: React.FC = () => {
         {meetings.map((meeting) => (
             <Marker
               key={meeting.id}
-              coordinate={meeting.coordinates}
+              coordinate={{
+                latitude: meeting.coordinates.latitude,
+                longitude: meeting.coordinates.longitude,
+              }}
               title={meeting.title}
               description={meeting.description}
-            />
+              onPress = {()=>{ navigation.navigate('MeetupDetail', { meetupId: meeting.id })}}
+            >
+            </Marker>
+              
         ))}
       </MapView>
     </View>

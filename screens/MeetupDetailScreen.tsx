@@ -63,7 +63,7 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
   const handleParticipantPress = (userId: string) => {
     const currentUser = auth.currentUser;
     if (currentUser && userId === currentUser.uid) {
-      navigation.navigate('MainApp', {screen: 'Profile'});
+      navigation.navigate( 'Profile');
     } else {
       navigation.navigate('UserProfile', { userId });
     }
