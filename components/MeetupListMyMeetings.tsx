@@ -258,7 +258,7 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress }) => 
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {/* Display the upcoming meetups section */}
       <AccordionSection title="Upcoming Meetups">
       <FlatList
@@ -305,7 +305,7 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress }) => 
         message={alertMessage}
         onConfirm={() => setAlertVisible(false)}
       />
-    </ScrollView>
+    </View>
   );
 };
 

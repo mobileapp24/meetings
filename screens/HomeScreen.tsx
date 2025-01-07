@@ -69,17 +69,33 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('MeetupDetail', { meetupId: meetup.id });
   };
 
-  const renderCategoryPicker = () => (
-    <Picker
-      selectedValue={selectedCategory}
-      style={{ height: 50, width: 150 }}
-      onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-    >
-      {categories.map((category) => (
-        <Picker.Item key={category} label={category} value={category} />
-      ))}
-    </Picker>
-  );
+  const renderCategoryPicker = () => {
+    if (Platform.OS === 'web') {
+      return (
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          style={styles.webSelect}
+        >
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+      );
+    } else {
+      return (
+        <Picker
+          selectedValue={selectedCategory}
+          onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+          style={styles.picker}
+        >
+          {categories.map((cat) => (
+            <Picker.Item key={cat} label={cat} value={cat} />
+          ))}
+        </Picker>
+      );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -119,6 +135,20 @@ const HomeScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  picker: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  webSelect: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    width: '100%',
+  },
   safeArea: {
     flex: 1,
   },

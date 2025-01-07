@@ -134,7 +134,7 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
     };
 
   return (
-    <>
+    <View>
       <FlatList
         data={meetups} // List of meetups to display
         renderItem={renderMeetupItem} // Render the function for each item
@@ -147,7 +147,7 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
         message={alertMessage}
         onConfirm={() => setAlertVisible(false)}
       />
-    </>
+    </View>
   );
 };
 
