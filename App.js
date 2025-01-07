@@ -85,6 +85,11 @@ const MapStack = () => (
       component={UserProfileScreen} 
       options={{ headerTitle: 'User Profile' }}
     />
+    <Stack.Screen 
+      name="Profile" 
+      component={ProfileScreen} 
+      options={{ headerTitle: 'Profile' }}
+    />
     
   </Stack.Navigator>
   );

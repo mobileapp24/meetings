@@ -9,6 +9,7 @@ import { Picker } from '@react-native-picker/picker';
 import { updateMeetupStatus } from '../utils/meetupUtils';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import AccordionSection from '../components/AccordionSection';
 
 type RootStackParamList = {
   MeetupDetail: { meetupId: string };
@@ -69,17 +70,33 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('MeetupDetail', { meetupId: meetup.id });
   };
 
-  const renderCategoryPicker = () => (
-    <Picker
-      selectedValue={selectedCategory}
-      style={{ height: 50, width: 150 }}
-      onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-    >
-      {categories.map((category) => (
-        <Picker.Item key={category} label={category} value={category} />
-      ))}
-    </Picker>
-  );
+  const renderCategoryPicker = () => {
+    if (Platform.OS === 'web') {
+      return (
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          style={styles.webSelect}
+        >
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+      );
+    } else {
+      return (
+        <Picker
+          selectedValue={selectedCategory}
+          onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+          style={styles.picker}
+        >
+          {categories.map((cat) => (
+            <Picker.Item key={cat} label={cat} value={cat} />
+          ))}
+        </Picker>
+      );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -91,19 +108,25 @@ const HomeScreen: React.FC = () => {
             <Text style={styles.filterLabel}>Filter by Category:</Text>
             {renderCategoryPicker()}
 
-            <Text style={styles.sectionTitle}>Active Meetups</Text>
+            
+
+            <AccordionSection title="Active Meetups">
             <MeetupList
               meetups={filteredActiveMeetups}
               onMeetupPress={handleMeetupPress}
               isFinishedList={false}
             />
+            </AccordionSection>
 
-            <Text style={styles.sectionTitle}>Finished Meetups</Text>
+            
+            <AccordionSection title="Finished Meetups">
             <MeetupList
               meetups={filteredFinishedMeetups}
               onMeetupPress={handleMeetupPress}
               isFinishedList={true}
             />
+            </AccordionSection>
+            
           </ScrollView>
         )}
 
@@ -119,6 +142,20 @@ const HomeScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  picker: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  webSelect: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    width: '100%',
+  },
   safeArea: {
     flex: 1,
   },
