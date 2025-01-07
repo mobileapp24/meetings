@@ -9,6 +9,7 @@ import { Picker } from '@react-native-picker/picker';
 import { updateMeetupStatus } from '../utils/meetupUtils';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import AccordionSection from '../components/AccordionSection';
 
 type RootStackParamList = {
   MeetupDetail: { meetupId: string };
@@ -107,19 +108,25 @@ const HomeScreen: React.FC = () => {
             <Text style={styles.filterLabel}>Filter by Category:</Text>
             {renderCategoryPicker()}
 
-            <Text style={styles.sectionTitle}>Active Meetups</Text>
+            
+
+            <AccordionSection title="Active Meetups">
             <MeetupList
               meetups={filteredActiveMeetups}
               onMeetupPress={handleMeetupPress}
               isFinishedList={false}
             />
+            </AccordionSection>
 
-            <Text style={styles.sectionTitle}>Finished Meetups</Text>
+            
+            <AccordionSection title="Finished Meetups">
             <MeetupList
               meetups={filteredFinishedMeetups}
               onMeetupPress={handleMeetupPress}
               isFinishedList={true}
             />
+            </AccordionSection>
+            
           </ScrollView>
         )}
 

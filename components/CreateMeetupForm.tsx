@@ -266,7 +266,7 @@ const CreateMeetupForm: React.FC = () => {
               latitudeDelta: 0.0922,
               longitudeDelta: 0.0421,
             }}
-            onPress ={(e) => {
+            onPress ={(e: { nativeEvent: { coordinate: { latitude: any; longitude: any; }; }; }) => {
               const { latitude, longitude } = e.nativeEvent.coordinate;
               setCoordinates(new GeoPoint(latitude, longitude));
             }}
