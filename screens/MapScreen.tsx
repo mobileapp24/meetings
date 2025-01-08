@@ -27,6 +27,18 @@ interface Meeting {
 const MapScreen: React.FC = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]); // State to store meetings
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const [lastMeetingPress, setLastMeetingPress] = useState(null);
+
+  const handleMarkerPress = (meeting) => {
+    const now = Date.now();
+    const DOUBLE_PRESS_DELAY = 1000; // Milisegundos permitidos para un doble clic
+
+    if (lastMeetingPress?.id == meeting.id) {
+      // Doble clic detectado
+      navigation.navigate('MeetupDetail', { meetupId: meeting.id });
+    }
+    setLastMeetingPress(meeting); 
+  };
   // Fetch meetings from Firestore 
   useEffect(() => {
     const fetchMeetings = async () => {
@@ -116,8 +128,7 @@ const MapScreen: React.FC = () => {
                 longitude: meeting.coordinates.longitude,
               }}
               title={meeting.title}
-              description={meeting.description}
-              onPress = {()=>{ navigation.navigate('MeetupDetail', { meetupId: meeting.id })}}
+              onPress = {()=>{ handleMarkerPress(meeting)}}
             >
             </Marker>
               
