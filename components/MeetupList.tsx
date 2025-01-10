@@ -106,7 +106,7 @@ const MeetupList: React.FC<MeetupListProps> = ({ meetups, onMeetupPress, isFinis
                 Average Rating: {item.averageRating ? item.averageRating.toFixed(1) : 'Not rated'}
               </Text>
             )}
-            {isUserInMeetup && userRating !== null && isFinishedList&& (
+            {isUserInMeetup && userRating !== 0 && isFinishedList&& userRating !== null &&  (
               <Text style={styles.userRating}>Your Rating: {userRating}</Text>
             )}
   

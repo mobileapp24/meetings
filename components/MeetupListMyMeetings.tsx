@@ -210,7 +210,6 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress }) => 
           <Text style={styles.meetupTitle}>{meetup.title}</Text>
           <Text style={styles.meetupDetails}>Date: {meetupDate.toLocaleString()}</Text>
           <Text style={styles.meetupDetails}>Location: {meetup.address}</Text>
-          <Text style={styles.meetupDetails}>Latitude: {meetup.coordinates.latitude}</Text>
           <Text style={styles.meetupDetails}>
            Participants: {meetup.participants ? meetup.participants.length : 0}/{meetup.maxParticipants}
           </Text>
@@ -221,7 +220,7 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress }) => 
                       Average Rating: {meetup.averageRating ? meetup.averageRating.toFixed(1) : 'Not rated'}
                     </Text>
                   )}
-          {  (sectionType === 'past'|| sectionType === 'created') && isUserInMeetup && userRating !== null && meetup.isFinished == true && (
+          {  (sectionType === 'past'|| sectionType === 'created') && isUserInMeetup && userRating !== null &&  userRating !== 0 && meetup.isFinished == true && (
                     <Text style={styles.userRating}>Your Rating: {userRating}</Text>
                   )}
         </TouchableOpacity>
