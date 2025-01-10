@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { signOut, deleteUser } from 'firebase/auth';
-import { doc, getDoc, updateDoc, deleteDoc, writeBatch, query, collection, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, writeBatch, query, collection, where, getDocs, arrayRemove } from 'firebase/firestore';
 import { auth, db } from '../services/config';
 import CustomAlert from '../components/CustomAlertWithOptions';
 import EditInterestsModal from '../components/EditInterestsModal';
@@ -113,6 +113,34 @@ const ProfileScreen = ({ navigation }) => {
       throw error;
     }
   };
+
+  const removeUserFromActiveMeetups = async (userId: string) => {
+    try {
+      const now = new Date();
+      // Query all meetups where the user is a participant and the meetup is still active
+      const meetupsRef = collection(db, 'meetups');
+      const q = query(
+        meetupsRef, 
+        where('participants', 'array-contains', userId),
+        where('date', '>', now.toISOString())
+      );
+      const querySnapshot = await getDocs(q);
+  
+      // Update each meetup to remove the user
+      const updatePromises = querySnapshot.docs.map(async (doc) => {
+        const meetupRef = doc.ref;
+        await updateDoc(meetupRef, {
+          participants: arrayRemove(userId)
+        });
+      });
+  
+      await Promise.all(updatePromises);
+      console.log(`User ${userId} removed from all active meetups`);
+    } catch (error) {
+      console.error('Error removing user from active meetups:', error);
+      throw error;
+    }
+  };
   
   // Deletes the user's account from Firestore and Firebase Auth and redirects to the login screen
   const performDeleteUser = async () => {
@@ -121,6 +149,9 @@ const ProfileScreen = ({ navigation }) => {
       if (user) {
         // Delete all meetups created by the user
         await deleteUserMeetups(user.uid);
+
+        // Remove user from all active meetups
+        await removeUserFromActiveMeetups(user.uid);
 
         // Delete the user document
         await deleteDoc(doc(db, 'users', user.uid));
