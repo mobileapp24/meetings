@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Button, Text, Platform, SafeAreaView } from 'react-native';
+import { View, StyleSheet, Button, Text, Platform, SafeAreaView, FlatList } from 'react-native';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/config';
 import MeetupList from '../components/MeetupList';
@@ -98,40 +98,45 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const renderSection = useCallback(({ item }: { item: { title: string; data: Meetup[]; isFinished: boolean } }) => (
+    <AccordionSection title={`${item.title} (${item.data.length})`}>
+      <MeetupList
+        meetups={item.data}
+        onMeetupPress={handleMeetupPress}
+        isFinishedList={item.isFinished}
+      />
+    </AccordionSection>
+  ), [handleMeetupPress]);
+
+  const sections = [
+    { title: 'Active Meetups', data: filteredActiveMeetups, isFinished: false },
+    { title: 'Finished Meetups', data: filteredFinishedMeetups, isFinished: true },
+  ];
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {showCreateForm ? (
-          <CreateMeetupForm/>
+          <CreateMeetupForm />
         ) : (
           <>
             <Text style={styles.filterLabel}>Filter by Category:</Text>
             {renderCategoryPicker()}
-
-            <AccordionSection title="Active Meetups">
-            <MeetupList
-              meetups={filteredActiveMeetups}
-              onMeetupPress={handleMeetupPress}
-              isFinishedList={false}
+            <FlatList
+              data={sections}
+              renderItem={renderSection}
+              keyExtractor={(item) => item.title}
+              ListFooterComponent={
+                <View style={styles.buttonContainer}>
+                  <Button
+                    title={showCreateForm ? "Back to Meetups" : "Create New Meetup"}
+                    onPress={() => setShowCreateForm(!showCreateForm)}
+                  />
+                </View>
+              }
             />
-            </AccordionSection>
-
-            <AccordionSection title="Finished Meetups">
-            <MeetupList
-              meetups={filteredFinishedMeetups}
-              onMeetupPress={handleMeetupPress}
-              isFinishedList={true}
-            />
-            </AccordionSection>
           </>
         )}
-
-        <View style={styles.buttonContainer}>
-          <Button
-            title={showCreateForm ? "Back to Meetups" : "Create New Meetup"}
-            onPress={() => setShowCreateForm(!showCreateForm)}
-          />
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -161,6 +166,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   filterLabel: {
     fontSize: 16,
