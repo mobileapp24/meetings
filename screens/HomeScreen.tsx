@@ -117,7 +117,7 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {showCreateForm ? (
-          <CreateMeetupForm />
+          <CreateMeetupForm onClose={() => setShowCreateForm(false)} />
         ) : (
           <>
             <Text style={styles.filterLabel}>Filter by Category:</Text>
@@ -129,8 +129,8 @@ const HomeScreen: React.FC = () => {
               ListFooterComponent={
                 <View style={styles.buttonContainer}>
                   <Button
-                    title={showCreateForm ? "Back to Meetups" : "Create New Meetup"}
-                    onPress={() => setShowCreateForm(!showCreateForm)}
+                    title="Create New Meetup"
+                    onPress={() => setShowCreateForm(true)}
                   />
                 </View>
               }
