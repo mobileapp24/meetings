@@ -1,7 +1,7 @@
 // Fixes a compatibility issue between the react-native-maps library and web environments, 
 // as that library is not specifically designed to run on web without previous modifications
-const chalk = require('chalk');
-const { readFile, writeFile, copyFile } = require('fs').promises;
+import chalk from 'chalk';
+import { promises as fs } from 'fs';
 console.log(chalk.green('here'));
 function log(...args) {
   console.log(chalk.yellow('[react-native-maps]'), ...args);
@@ -9,12 +9,12 @@ function log(...args) {
 async function reactNativeMaps() {
   log('📦 Creating web compatibility of react-native-maps using an empty module loaded on web builds');
   const modulePath = 'node_modules/react-native-maps';
-  await writeFile(`${modulePath}/lib/index.web.js`, 'module.exports = {}', 'utf-8');
-  await copyFile(`${modulePath}/lib/index.d.ts`, `${modulePath}/lib/index.web.d.ts`);
-  const pkg = JSON.parse(await readFile(`${modulePath}/package.json`));
+  await fs.writeFile(`${modulePath}/lib/index.web.js`, 'module.exports = {}', 'utf-8');
+  await fs.copyFile(`${modulePath}/lib/index.d.ts`, `${modulePath}/lib/index.web.d.ts`);
+  const pkg = JSON.parse(await fs.readFile(`${modulePath}/package.json`));
   pkg['react-native'] = 'lib/index.js';
   pkg['main'] = 'lib/index.web.js';
-  await writeFile(`${modulePath}/package.json`, JSON.stringify(pkg, null, 2), 'utf-8');
+  await fs.writeFile(`${modulePath}/package.json`, JSON.stringify(pkg, null, 2), 'utf-8');
   log('✅ script ran successfully');
 }
 reactNativeMaps();

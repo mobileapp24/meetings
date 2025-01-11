@@ -4,8 +4,20 @@ import { updateProfile, createUserWithEmailAndPassword } from 'firebase/auth'; /
 import { setDoc, doc } from 'firebase/firestore'; // Functions to create and write documents
 import { auth, db } from '../services/config'; // Firebase configuration
 import CustomAlert from '../components/CustomAlert'; // Display messages to the user
+import { StackNavigationProp } from '@react-navigation/stack';
 
-const RegisterScreen = ({ navigation }) => {
+type RootStackParamList = {
+  Register: undefined;
+  Login: undefined;
+};
+
+type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
+
+type Props = {
+  navigation: RegisterScreenNavigationProp;
+};
+
+const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
   // States for storing user's inputs (email, password and name)
   const [email, setEmail] = useState('');
