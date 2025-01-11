@@ -162,7 +162,7 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
         </Text>
       )}
 
-      <Text style={styles.subtitle}>Participants:</Text>
+      <Text style={[styles.subtitle, { marginBottom: 10 }]}>Participants:</Text>
       {participants.map((participant) => (
         <TouchableOpacity
           key={participant.id}
