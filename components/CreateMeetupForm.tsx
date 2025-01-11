@@ -222,7 +222,7 @@ const CreateMeetupForm: React.FC = () => {
       console.log("mapa web")
       return (
         <View style={styles.mapContainer}>
-        <APIProvider apiKey={'AIzaSyDRWYupSy0PVuX6sGtCLneGI3qqJj3JCcE'} onLoad={() => console.log('Maps API has loaded.')}>
+        <APIProvider apiKey={process.env.EXPO_PUBLIC_MAPS} onLoad={() => console.log('Maps API has loaded.')}>
            <Map
                defaultZoom={13}
                defaultCenter={ { lat: 45.4642, lng: 9.1900 } } // By default, we place the map centered on the coordinates of the Duomo Square

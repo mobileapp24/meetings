@@ -2,14 +2,19 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyArwPJHSQaP8TKaXeVoVWnwj6EAACfXRpQ", // Public key to access 
-    authDomain: "pruebameeting-da55c.firebaseapp.com", // Authorized domain for authentication
-    projectId: "pruebameeting-da55c", // Unique project identifier
-    storageBucket: "pruebameeting-da55c", // Firebase storage URL
-    messagingSenderId: "486078393972", // Sender ID for push notification services
-    appId: "1:486078393972:web:f5d4d8eacc5d2b45f06b21" // Unique identifier 
+
+console.log('Variables de entorno:', process.env);
+
+const firebaseConfig = {
+    apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID
   };
+
+
 
 const app = initializeApp(firebaseConfig); // Initializes the Firebase application with the settings specified 
 export const auth = getAuth(app); // Authentication service to manage registration, login and other user processes
