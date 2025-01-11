@@ -67,20 +67,11 @@ const RateMeetupModal: React.FC<RateMeetupModalProps> = ({ visible, onClose, onS
 };
 
 const styles = StyleSheet.create({
-  
-  pickerContainerLandscape: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '90%',
-    maxWidth: 600,
-    paddingHorizontal: 20,
-  },
   centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
     margin: 20,
@@ -91,57 +82,58 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 2
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5, // Elevation for iOS
-    minWidth: 300, // Minimum width for the modal
-    maxWidth: 600, // Max width for large screens
+    elevation: 5
   },
-  
+  pickerContainerLandscape: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '90%',
+    maxWidth: 600,
+    paddingHorizontal: 20,
+  },
   modalTitle: {
     marginBottom: 15,
     textAlign: 'center',
-    fontSize: 22, // Larger font size for better readability
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
   },
   starsContainer: {
     flexDirection: 'row',
     marginBottom: 20,
-    justifyContent: 'center',
   },
   starButton: {
-    padding: 10,
+    padding: 5,
   },
   starText: {
-    fontSize: 40, // Larger stars for better user experience
-    color: '#ccc', // Default star color
+    fontSize: 30,
+    color: '#ccc',
   },
   selectedStar: {
-    color: '#FFD700', // Gold color for selected stars
+    color: '#FFD700',
   },
   button: {
     borderRadius: 20,
     padding: 10,
     elevation: 2,
     marginBottom: 10,
-    minWidth: 100, // Ensures the button has a minimum size
+    minWidth: 100,
   },
   submitButton: {
-    backgroundColor: '#2196F3', // Blue color for submit
+    backgroundColor: '#2196F3',
   },
   cancelButton: {
-    backgroundColor: '#FF3B30', // Red color for cancel
+    backgroundColor: '#FF3B30',
   },
   textStyle: {
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
-    fontSize: 16,
   },
-
 });
 
 export default RateMeetupModal;

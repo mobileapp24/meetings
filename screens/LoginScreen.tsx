@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth'; // Handle email-password authentication
 import { auth } from '../services/config'; // Firebase configuration
 import CustomAlert from '../components/CustomAlert'; // Display messages to the user
