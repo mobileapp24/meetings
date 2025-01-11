@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet,Image } from 'react-native';
 import { updateProfile, createUserWithEmailAndPassword } from 'firebase/auth'; // Functions to authenticate and update user data
 import { setDoc, doc } from 'firebase/firestore'; // Functions to create and write documents
 import { auth, db } from '../services/config'; // Firebase configuration
@@ -81,6 +81,7 @@ const RegisterScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      
       <Text style={styles.title}>Register</Text>
       <TextInput
         style={styles.input}
