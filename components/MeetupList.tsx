@@ -193,8 +193,9 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   buttonContainer: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
   },
   joinButton: {
     backgroundColor: '#007AFF',
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   list: {
-    marginBottom: 80,
+    flex: 1,
   },
 });
 
