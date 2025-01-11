@@ -6,12 +6,18 @@ import DateTimePicker from '@react-native-community/datetimepicker'; // Cross-pl
 import { Picker } from '@react-native-picker/picker'; // Cross-platform dropdown picker for categories
 import CustomAlert from './CustomAlert'; // Custom reusable alert component
 import {APIProvider, Map, MapCameraChangedEvent, MapMouseEvent, Marker  } from '@vis.gl/react-google-maps'; // Map utilities for the web 
+import { useNavigation } from '@react-navigation/native';
 
 // Predefined categories for meetups
 const categories = ['Sports', 'Study', 'Social', 'Work', 'Other'];
 
-const CreateMeetupForm: React.FC = () => {
+interface CreateMeetupFormProps {
+  onClose: () => void;
+}
+
+const CreateMeetupForm: React.FC<CreateMeetupFormProps> = ({ onClose }) => {
   // State variables for the form fields and the UI behavior
+  const navigation = useNavigation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
@@ -288,7 +294,10 @@ const CreateMeetupForm: React.FC = () => {
 
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <TouchableOpacity style={styles.backButton} onPress={onClose}>
+        <Text style={styles.backButtonText}>← Back</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Create New Meetup</Text>
       {/* Display the different fields to fill out by the user */}
       <TextInput
@@ -417,6 +426,16 @@ const styles = StyleSheet.create({
   },
   coordinatesText: {
     marginBottom: 10,
+  },
+  backButton: {
+    marginBottom: 20,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+  },
+  contentContainer: {
+    paddingBottom: 40, // Add some padding at the bottom
   },
 });
 
