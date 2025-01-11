@@ -122,41 +122,56 @@ const RegisterScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Make the view fill the screen
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#F5F5F5',
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 30,
   },
   input: {
     width: '100%',
-    height: 40,
-    borderColor: 'gray',
+    height: 50,
+    borderColor: '#CCC',
     borderWidth: 1,
-    borderRadius: 5,
-    marginBottom: 10,
-    paddingHorizontal: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+    paddingHorizontal: 15,
+    backgroundColor: '#FFF',
+    fontSize: 16,
+    elevation: 1, 
   },
   button: {
-    backgroundColor: '#007AFF',
-    padding: 10,
-    borderRadius: 5,
-    width: '100%', // Button width matches input width
+    backgroundColor: '#4CAF50',
+    padding: 15,
+    borderRadius: 8,
+    width: '100%',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 15,
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3, 
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   linkText: {
     color: '#007AFF',
-    marginTop: 10,
+    fontSize: 16,
+    marginTop: 15,
+    textDecorationLine: 'underline', 
   },
 });
+
 
 export default RegisterScreen;
 
