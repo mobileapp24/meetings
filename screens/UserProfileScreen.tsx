@@ -13,7 +13,12 @@ type UserProfileScreenProps = {
 };
 
 const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
-  const [profile, setProfile] = useState<any>(null);  // State for storing the user's profile data, initially null
+  const [profile, setProfile] = useState<{ // State for storing the user's profile data, initially null
+    name: string;
+    email: string;
+    rating?: number;
+    interests?: string[];
+  } | null>(null);  
   const [loading, setLoading] = useState(true); // State to track whether the data is still loading
   const [error, setError] = useState<string | null>(null); // State for storing error messages, initially null
 

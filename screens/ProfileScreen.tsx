@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { signOut, deleteUser } from 'firebase/auth';
-import { doc, getDoc, updateDoc, deleteDoc, writeBatch, query, collection, where, getDocs, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, writeBatch, query, collection, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../services/config';
 import CustomAlert from '../components/CustomAlertWithOptions';
 import EditInterestsModal from '../components/EditInterestsModal';

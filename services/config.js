@@ -14,8 +14,6 @@ const firebaseConfig = {
     appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID
   };
 
-
-
 const app = initializeApp(firebaseConfig); // Initializes the Firebase application with the settings specified 
 export const auth = getAuth(app); // Authentication service to manage registration, login and other user processes
 export const db = getFirestore(app); // Firestore service to interact with the database

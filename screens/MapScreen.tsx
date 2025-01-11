@@ -96,11 +96,7 @@ const MapScreen: React.FC = () => {
   
   } else {
     // Dynamically import React Native Maps for mobile
-    let MapView: any;
-    let Marker: any;
-    const Maps = require('react-native-maps');
-    MapView = Maps.default;
-    Marker = Maps.Marker;
+    const { default: MapView, Marker } = require('react-native-maps');
 
   // Render for mobile platforms
   return (
