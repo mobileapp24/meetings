@@ -202,46 +202,7 @@ const HomeScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  picker: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  webSelect: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    width: '100%',
-  },
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-  },
-  filterLabel: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  buttonContainer: {
-    marginTop: 20,
-  },
+ 
   pickerLandscape: {
     width: '60%',
     height: 150,
@@ -254,6 +215,65 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     paddingHorizontal: 20,
   },
+ 
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F5F5F5', // Fondo limpio y moderno
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  filterLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+  },
+  picker: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 50,
+    marginBottom: 15,
+    backgroundColor: '#FFF', // Fondo blanco
+    elevation: 2, // Sombra ligera
+  },
+  webSelect: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 15,
+    width: '100%',
+    backgroundColor: '#FFF',
+  },
+  buttonContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginVertical: 15,
+  },
+  categoryButton: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    backgroundColor: '#EDEDED', // Fondo gris claro para botones
+    elevation: 2,
+    marginBottom: 15,
+  },
+  categoryButtonText: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -261,39 +281,33 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   pickerContainer: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFF',
     borderRadius: 10,
     padding: 20,
-    width: '80%',
+    width: '85%',
     maxWidth: 400,
+    elevation: 4, // Sombra para destacar el modal
   },
-  doneButton: {
-    alignSelf: 'center',
-    marginTop: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#007AFF',
-    borderRadius: 5,
-  },
-  doneButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  categoryButton: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-  },
-  categoryButtonText: {
-    fontSize: 16,
-  },
+  
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  doneButton: {
+    backgroundColor: '#4CAF50', // Verde atractivo para el botón
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignSelf: 'center',
+    marginTop: 15,
+  },
+  doneButtonText: {
+    fontSize: 16,
+    color: '#FFF',
+    fontWeight: '600',
     textAlign: 'center',
   },
 });
