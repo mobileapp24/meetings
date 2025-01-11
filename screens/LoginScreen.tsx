@@ -3,8 +3,21 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { signInWithEmailAndPassword } from 'firebase/auth'; // Handle email-password authentication
 import { auth } from '../services/config'; // Firebase configuration
 import CustomAlert from '../components/CustomAlert'; // Display messages to the user
+import { StackNavigationProp } from '@react-navigation/stack';
 
-const LoginScreen = ({ navigation }) => {
+type RootStackParamList = {
+  Login: undefined;
+  MainApp: undefined;
+  Register: undefined;
+};
+
+type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
+
+type Props = {
+  navigation: LoginScreenNavigationProp;
+};
+
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   // States for storing user's inputs (email and password)
   const [email, setEmail] = useState(''); 
