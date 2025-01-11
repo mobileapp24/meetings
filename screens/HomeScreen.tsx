@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Button, Text, Platform, SafeAreaView, FlatList } from 'react-native';
+import { View, StyleSheet, Button, Text, Platform, SafeAreaView, FlatList, TouchableOpacity, Modal, useWindowDimensions} from 'react-native';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/config';
 import MeetupList from '../components/MeetupList';
 import CreateMeetupForm from '../components/CreateMeetupForm';
 import { Meetup } from '../types/meetup';
-import { Picker } from '@react-native-picker/picker';
+import { Picker, PickerIOS } from '@react-native-picker/picker';
 import { updateMeetupStatus } from '../utils/meetupUtils';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import AccordionSection from '../components/AccordionSection';
+
+
+
+
 
 type RootStackParamList = {
   MeetupDetail: { meetupId: string };
@@ -25,7 +29,9 @@ const HomeScreen: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const fetchMeetups = useCallback(async () => {
@@ -83,7 +89,50 @@ const HomeScreen: React.FC = () => {
           ))}
         </select>
       );
-    } else {
+    }else if(Platform.OS === 'ios'){
+      
+      return (
+        <View>
+          <TouchableOpacity style={styles.categoryButton} onPress={() => setShowCategoryPicker(true)}>
+            <Text style={styles.categoryButtonText}>{selectedCategory}</Text>
+          </TouchableOpacity>
+          <Modal
+            visible={showCategoryPicker}
+            animationType="fade"
+            transparent={true}
+            supportedOrientations={['portrait', 'landscape']}
+          >
+            <View style={styles.modalContainer}>
+              <View style={[
+                styles.pickerContainer,
+                isLandscape && styles.pickerContainerLandscape
+              ]}>
+                <Text style={styles.modalTitle}>Select Category</Text>
+                <Picker
+                  selectedValue={selectedCategory}
+                  onValueChange={(itemValue) => {
+                    setSelectedCategory(itemValue);
+                    setShowCategoryPicker(false);
+                  }}
+                  style={[styles.picker, isLandscape && styles.pickerLandscape]}
+                >
+                  {categories.map((cat) => (
+                    <Picker.Item key={cat} label={cat} value={cat} />
+                  ))}
+                </Picker>
+                <TouchableOpacity
+                  style={styles.doneButton}
+                  onPress={() => setShowCategoryPicker(false)}
+                >
+                  <Text style={styles.doneButtonText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        </View>
+      );
+
+    }else {
       return (
         <Picker
           selectedValue={selectedCategory}
@@ -183,6 +232,64 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 20,
   },
+  pickerLandscape: {
+    width: '60%',
+    height: 150,
+  },
+  pickerContainerLandscape: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '90%',
+    maxWidth: 600,
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  pickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '80%',
+    maxWidth: 400,
+  },
+  doneButton: {
+    alignSelf: 'center',
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#007AFF',
+    borderRadius: 5,
+  },
+  doneButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  categoryButton: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
+  categoryButtonText: {
+    fontSize: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
 });
 
 export default HomeScreen;
+
+function elseif(arg0: boolean) {
+  throw new Error('Function not implemented.');
+}

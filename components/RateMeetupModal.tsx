@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, StyleSheet,useWindowDimensions} from 'react-native';
 
 // Properties for the RateMeetupModal component (visibility, callback to close modal and to submit the rating)
 interface RateMeetupModalProps {
@@ -10,7 +10,8 @@ interface RateMeetupModalProps {
 
 const RateMeetupModal: React.FC<RateMeetupModalProps> = ({ visible, onClose, onSubmit }) => {
   const [rating, setRating] = useState(0); // State to track the user's selected rating
-
+   const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   // Handles the submission of the selected rating 
   const handleSubmit = () => {
     onSubmit(rating);  
@@ -20,12 +21,13 @@ const RateMeetupModal: React.FC<RateMeetupModalProps> = ({ visible, onClose, onS
   return (
     <Modal
       animationType="slide" 
-      transparent={true} 
+      transparent={true}
+      supportedOrientations={['portrait', 'landscape']} 
       visible={visible} // Controls visibility based on the 'visible' prop
       onRequestClose={onClose} // Android back button closes the modal
     >
       <View style={styles.centeredView}>
-        <View style={styles.modalView}>
+        <View style={[styles.modalView,  isLandscape && styles.pickerContainerLandscape]}>
           <Text style={styles.modalTitle}>Rate this Meetup</Text>
           {/* Star rating system */}
           <View style={styles.starsContainer}>
@@ -85,6 +87,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5
+  },
+  pickerContainerLandscape: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '90%',
+    maxWidth: 600,
+    paddingHorizontal: 20,
   },
   modalTitle: {
     marginBottom: 15,
