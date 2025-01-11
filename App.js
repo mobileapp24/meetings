@@ -31,11 +31,6 @@ const HomeStack = () => (
       options={{ headerTitle: 'Meetup Details' }}
     />
     <Stack.Screen 
-      name="Profile" 
-      component={ProfileScreen} 
-      options={{ headerTitle: 'Profile' }}
-    />
-    <Stack.Screen 
       name="UserProfile" 
       component={UserProfileScreen} 
       options={{ headerTitle: 'User Profile' }}
@@ -54,11 +49,6 @@ const MyMeetupsStack = () => (
       name="MeetupDetail" 
       component={MeetupDetailScreen} 
       options={{ headerTitle: 'Meetup Details' }}
-    />
-    <Stack.Screen 
-      name="Profile" 
-      component={ProfileScreen} 
-      options={{ headerTitle: 'Profile' }}
     />
     <Stack.Screen 
       name="UserProfile" 
@@ -85,12 +75,6 @@ const MapStack = () => (
       component={UserProfileScreen} 
       options={{ headerTitle: 'User Profile' }}
     />
-    <Stack.Screen 
-      name="Profile" 
-      component={ProfileScreen} 
-      options={{ headerTitle: 'Profile' }}
-    />
-    
   </Stack.Navigator>
   );
 
