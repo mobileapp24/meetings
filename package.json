@@ -23,6 +23,7 @@
     "@vis.gl/react-google-maps": "^1.4.2",
     "dotenv": "^16.4.7",
     "expo": "~52.0.18",
+    "expo-env": "^1.1.1",
     "expo-firebase": "^0.0.0-alpha.0",
     "expo-image-picker": "^16.0.3",
     "expo-status-bar": "~2.0.0",
