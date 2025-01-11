@@ -10,7 +10,7 @@ export const updateMeetupStatus = async () => {
 
   try {
     const querySnapshot = await getDocs(q);
-    const batch = [];
+    const batch: Promise<void>[] = [];
 
     querySnapshot.forEach((document) => {
       const meetup = document.data() as Meetup;
@@ -26,4 +26,3 @@ export const updateMeetupStatus = async () => {
     console.error('Error updating meetup statuses:', error);
   }
 };
-

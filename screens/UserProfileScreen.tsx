@@ -38,7 +38,18 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
            // If fetching a profile other than the current user's
           const userDoc = await getDoc(doc(db, 'users', userId)); // Retrieve the document from the Firestore database
           if (userDoc.exists()) {
-            setProfile(userDoc.data()); // Set profile data if the document exists
+            const data = userDoc.data();
+            // Ensure data has the expected structure
+            if (typeof data.name === 'string' && typeof data.email === 'string') {
+              setProfile({
+                name: data.name,
+                email: data.email,
+                rating: typeof data.rating === 'number' ? data.rating : undefined,
+                interests: Array.isArray(data.interests) ? data.interests : [],
+              });
+            } else {
+              setError('Invalid user data format');
+            }
           } else {
             setError('User not found');
           }

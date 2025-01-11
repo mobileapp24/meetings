@@ -33,7 +33,11 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
 
   const currentUser = auth.currentUser;   // Retrieve the currently authenticated user
   const isUserInMeetup = currentUser && meetup?.participants.includes(currentUser.uid);
-  const isMeetupFull = meetup?.participants?.length >= meetup?.maxParticipants || false;
+  const isMeetupFull = meetup?.participants?.length !== undefined && meetup?.maxParticipants !== undefined
+    ? meetup.participants.length >= meetup.maxParticipants
+    : false;
+
+
 
 
   useEffect(() => {  // Effect to fetch meetup details when the component mounts or meetupId changes

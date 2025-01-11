@@ -39,10 +39,13 @@ const HomeScreen: React.FC = () => {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const meetupsData: Meetup[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data() as Meetup,
-      }));
+      const meetupsData: Meetup[] = snapshot.docs.map((doc) => {
+        const data = doc.data() as Meetup;
+        return {
+          ...data,
+          id: doc.id,
+        };
+      });
        // Separate meetups into active and finished categories
       setActiveMeetups(meetupsData.filter((meetup) => !meetup.isFinished));
       setFinishedMeetups(meetupsData.filter((meetup) => meetup.isFinished));

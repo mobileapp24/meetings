@@ -27,10 +27,10 @@ interface Meeting {
 const MapScreen: React.FC = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]); // State to store meetings
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const [lastMeetingPress, setLastMeetingPress] = useState(null);
+  const [lastMeetingPress, setLastMeetingPress] = useState<Meeting | null>(null);
   const { width, height } = useWindowDimensions();
 
-  const handleMarkerPress = (meeting) => {
+  const handleMarkerPress = (meeting: Meeting) => {
 
     if (lastMeetingPress?.id == meeting.id) {
       // Doble clic detectado
@@ -48,14 +48,14 @@ const MapScreen: React.FC = () => {
         const querySnapshot = await getDocs(q);
         const meetingsData: Meeting[] = [];
         querySnapshot.forEach((doc) => {
-          const data = doc.data() as Meeting;
+          const { id, ...dataWithoutId } = doc.data() as Meeting;
           // Only include meetings with valid coordinates
-          if (data.coordinates?.latitude && data.coordinates?.longitude) {
-            const meetingDate = new Date(data.date);
+          if (dataWithoutId.coordinates?.latitude && dataWithoutId.coordinates?.longitude) {
+            const meetingDate = new Date(dataWithoutId.date);
             if (meetingDate > now) {
               meetingsData.push({
                 id: doc.id,
-                ...data,
+                ...dataWithoutId,
               });
             }
           }
