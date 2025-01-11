@@ -77,7 +77,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       showAlert('Registration Successful', 'You can now login with your new account.'); // Alert in case of successful registration
     } catch (error) {
       console.error('Registration error:', error);
-      if ((error as any).code === 'auth/email-already-in-use') { // Especific errors with Firebase
+      if (error.code === 'auth/email-already-in-use') { // Especific errors with Firebase
         showAlert('Registration Error', 'This email is already in use. Please use a different email or login to your existing account.');
       } else { // Generic error message
         showAlert('Registration Error', error.message);
