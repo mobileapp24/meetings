@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, useWindowDimensions } from 'react-native';
 
 // Properties of the Custom Alert component (title, message, confirmation and whether it is visible)
 interface CustomAlertProps {
@@ -10,15 +10,18 @@ interface CustomAlertProps {
 }
 
 const CustomAlert: React.FC<CustomAlertProps> = ({ visible, title, message, onConfirm }) => {
+  const { width, height } = useWindowDimensions();
+    const isLandscape = width > height;
   return (
     <Modal
+    supportedOrientations={['portrait', 'landscape']} 
       transparent={true} // Background of the modal is partially visible
       visible={visible} // Control the visibility of the modal
       animationType="fade" // Fade animation when the modal appears or disappears
     >
       {/* Center modal in the screen */}
       <View style={styles.centeredView}>
-        <View style={styles.modalView}>
+        <View style={[styles.modalView,  isLandscape && styles.pickerContainerLandscape]}>
           {/* Alert Title */}
           <Text style={styles.modalTitle}>{title}</Text>
           {/* Alert Message */}
@@ -79,6 +82,14 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  pickerContainerLandscape: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '90%',
+    maxWidth: 600,
+    paddingHorizontal: 20,
   },
 });
 

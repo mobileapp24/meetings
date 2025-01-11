@@ -18,6 +18,7 @@ type Props = {
 };
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  
 
   // States for storing user's inputs (email and password)
   const [email, setEmail] = useState(''); 
