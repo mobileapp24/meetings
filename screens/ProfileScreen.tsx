@@ -114,33 +114,46 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  const removeUserFromActiveMeetups = async (userId: string) => {
+  const removeUserFromAllMeetups = async (userId: string) => {
     try {
-      const now = new Date();
-      // Query all meetups where the user is a participant and the meetup is still active
+      // Query all meetups where the user is a participant
       const meetupsRef = collection(db, 'meetups');
-      const q = query(
-        meetupsRef, 
-        where('participants', 'array-contains', userId),
-        where('date', '>', now.toISOString())
-      );
+      const q = query(meetupsRef, where('participants', 'array-contains', userId));
       const querySnapshot = await getDocs(q);
   
-      // Update each meetup to remove the user
-      const updatePromises = querySnapshot.docs.map(async (doc) => {
-        const meetupRef = doc.ref;
+      // Update each meetup to remove the user and their rating
+      const updatePromises = querySnapshot.docs.map(async (docSnapshot) => {
+        const meetupRef = doc(db, 'meetups', docSnapshot.id);
+        const meetupData = docSnapshot.data();
+        
+        // Remove user from participants
+        const updatedParticipants = meetupData.participants.filter((id: string) => id !== userId);
+        
+        // Remove user's rating
+        const updatedRatings = { ...meetupData.ratings };
+        delete updatedRatings[userId];
+        
+        // Recalculate average rating
+        const ratingValues = Object.values(updatedRatings) as number[];
+        const averageRating = ratingValues.length > 0
+          ? ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length
+          : 0;
+  
         await updateDoc(meetupRef, {
-          participants: arrayRemove(userId)
+          participants: updatedParticipants,
+          ratings: updatedRatings,
+          averageRating: averageRating
         });
       });
   
       await Promise.all(updatePromises);
-      console.log(`User ${userId} removed from all active meetups`);
+      console.log(`User ${userId} removed from all meetups and their ratings deleted`);
     } catch (error) {
-      console.error('Error removing user from active meetups:', error);
+      console.error('Error removing user from meetups:', error);
       throw error;
     }
   };
+  
   
   // Deletes the user's account from Firestore and Firebase Auth and redirects to the login screen
   const performDeleteUser = async () => {
@@ -151,7 +164,7 @@ const ProfileScreen = ({ navigation }) => {
         await deleteUserMeetups(user.uid);
 
         // Remove user from all active meetups
-        await removeUserFromActiveMeetups(user.uid);
+        await removeUserFromAllMeetups(user.uid);
 
         // Delete the user document
         await deleteDoc(doc(db, 'users', user.uid));
