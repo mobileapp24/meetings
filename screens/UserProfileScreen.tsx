@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-nat
 import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../services/config';
 
+// Define TypeScript type for the route parameters, expecting a `userId` string
 type UserProfileScreenProps = {
   route: {
     params: {
@@ -12,28 +13,27 @@ type UserProfileScreenProps = {
 };
 
 const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any>(null);  // State for storing the user's profile data, initially null
+  const [loading, setLoading] = useState(true); // State to track whether the data is still loading
+  const [error, setError] = useState<string | null>(null); // State for storing error messages, initially null
 
-  useEffect(() => {
-    const fetchProfile = async () => {
+  useEffect(() => { // useEffect runs when the component mounts or when `route.params.userId` changes
+    const fetchProfile = async () => { // Function to fetch user profile data
       try {
-        const userId = route.params.userId;
-        const currentUser = auth.currentUser;
+        const userId = route.params.userId; // Extract userId from route parameters
+        const currentUser = auth.currentUser; // Get the currently authenticated user
 
         if (currentUser && userId === currentUser.uid) {
           // If it's the current user's profile, fetch from auth
           setProfile({
             name: currentUser.displayName || 'No Name',
             email: currentUser.email || 'No Email',
-            // Add any other fields you want to display
           });
         } else {
-          // Fetch other user's profile from Firestore
-          const userDoc = await getDoc(doc(db, 'users', userId));
+           // If fetching a profile other than the current user's
+          const userDoc = await getDoc(doc(db, 'users', userId)); // Retrieve the document from the Firestore database
           if (userDoc.exists()) {
-            setProfile(userDoc.data());
+            setProfile(userDoc.data()); // Set profile data if the document exists
           } else {
             setError('User not found');
           }
@@ -42,12 +42,13 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
         console.error('Error fetching user profile:', err);
         setError('An error occurred while fetching the user profile');
       } finally {
-        setLoading(false);
+        setLoading(false);  // Mark loading as complete
       }
     };
 
-    fetchProfile();
-  }, [route.params.userId]);
+    fetchProfile(); // Invoke the function to fetch profile data
+  }, [route.params.userId]); // Dependency array: Re-run when `userId` changes
+
 
   if (loading) {
     return (
@@ -65,7 +66,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
     );
   }
 
-  if (!profile) {
+  if (!profile) {// Render a fallback message if no profile data is available
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.errorText}>No profile data available</Text>
@@ -75,8 +76,11 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
 
   return (
     <ScrollView style={styles.container}>
+       {/* Display the user's name */}
       <Text style={styles.title}>{profile.name}</Text>
+      {/* Display the user's email */}
       <Text style={styles.info}>Email: {profile.email}</Text>
+       {/* Display the user's rating, if available */}
       <Text style={styles.info}>
         Rating: {profile.rating ? profile.rating.toFixed(1) : 'Not rated yet'}
       </Text>
@@ -84,6 +88,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
       <Text style={styles.sectionTitle}>Interests</Text>
       <View style={styles.interestsContainer}>
         {profile.interests && profile.interests.length > 0 ? (
+           // Check if interests exist and are non-empty
           profile.interests.map((interest: string, index: number) => (
             <Text key={index} style={styles.interestItem}>{interest}</Text>
           ))

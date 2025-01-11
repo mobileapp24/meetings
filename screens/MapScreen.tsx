@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform, useWindowDimensions } from 'react-native';
-import { collection, query, getDocs, where, Timestamp } from 'firebase/firestore';  // Utilities for querying data
+import { View, StyleSheet, Platform, useWindowDimensions } from 'react-native';
+import { collection, query, getDocs } from 'firebase/firestore';  // Utilities for querying data
 import { db } from '../services/config'; // Firebase database configuration
 import {APIProvider, Map, MapCameraChangedEvent, Marker  } from '@vis.gl/react-google-maps';
-import { Callout } from 'react-native-maps';
 
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+
+import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
