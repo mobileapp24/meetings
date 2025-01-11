@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform, useWindowDimensions } from 'react-native';
 import { collection, query, getDocs, where, Timestamp } from 'firebase/firestore';  // Utilities for querying data
 import { db } from '../services/config'; // Firebase database configuration
 import {APIProvider, Map, MapCameraChangedEvent, Marker  } from '@vis.gl/react-google-maps';
@@ -28,6 +28,7 @@ const MapScreen: React.FC = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]); // State to store meetings
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [lastMeetingPress, setLastMeetingPress] = useState(null);
+  const { width, height } = useWindowDimensions();
 
   const handleMarkerPress = (meeting) => {
 
@@ -103,9 +104,9 @@ const MapScreen: React.FC = () => {
 
   // Render for mobile platforms
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { width, height }]}>
       <MapView
-        style={styles.map}
+        style={{ width: '100%', height: '100%' }}
         initialRegion={{
           // By default, we place the map centered on the coordinates of the Duomo Square
           latitude: 45.4642, 
@@ -156,10 +157,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
-  },
-  map: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
   },
   meetingItem: {
     backgroundColor: 'white',
