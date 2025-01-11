@@ -30,8 +30,6 @@ const MapScreen: React.FC = () => {
   const [lastMeetingPress, setLastMeetingPress] = useState(null);
 
   const handleMarkerPress = (meeting) => {
-    const now = Date.now();
-    const DOUBLE_PRESS_DELAY = 1000; // Milisegundos permitidos para un doble clic
 
     if (lastMeetingPress?.id == meeting.id) {
       // Doble clic detectado
@@ -74,7 +72,7 @@ const MapScreen: React.FC = () => {
   if (Platform.OS === 'web') {
     return (
       <View style={styles.webContainer}>
-        <APIProvider apiKey={'AIzaSyDRWYupSy0PVuX6sGtCLneGI3qqJj3JCcE'} onLoad={() => console.log('Maps API has been loaded.')}>
+        <APIProvider apiKey={process.env.EXPO_PUBLIC_MAPS} onLoad={() => console.log('Maps API has been loaded.')}>
            <Map
                defaultZoom={13}
                defaultCenter={ { lat: 45.4642, lng: 9.1900 } } // By default, we place the map centered on the coordinates of the Duomo Square
