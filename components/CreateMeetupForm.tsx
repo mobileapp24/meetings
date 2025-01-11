@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
 import { collection, addDoc, updateDoc, doc, arrayUnion, GeoPoint } from 'firebase/firestore'; // Utilities for database interaction
 import { db, auth } from '../services/config'; // Firebase configuration and authentication services
-import DateTimePicker, {Event} from '@react-native-community/datetimepicker'; // Cross-platform date/time picker
+import DateTimePicker, {DateTimePickerEvent} from '@react-native-community/datetimepicker'; // Cross-platform date/time picker
 import { Picker } from '@react-native-picker/picker'; // Cross-platform dropdown picker for categories
 import CustomAlert from './CustomAlert'; // Custom reusable alert component
 import {APIProvider, Map, MapCameraChangedEvent, MapMouseEvent, Marker  } from '@vis.gl/react-google-maps'; // Map utilities for the web 
@@ -122,7 +122,7 @@ const CreateMeetupForm: React.FC<CreateMeetupFormProps> = ({ onClose }) => {
   };
 
   // Handles the date selection for date picker
-  const onDateChange = (event: Event, selectedDate?: Date) => {
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
       setDate(selectedDate);
@@ -130,7 +130,7 @@ const CreateMeetupForm: React.FC<CreateMeetupFormProps> = ({ onClose }) => {
   };
 
   // Handles the time selection for time picker
-  const onTimeChange = (event: Event, selectedTime?: Date) => {
+  const onTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
     setShowTimePicker(Platform.OS === 'ios');
     if (selectedTime) {
       setDate(new Date(
@@ -233,12 +233,15 @@ const CreateMeetupForm: React.FC<CreateMeetupFormProps> = ({ onClose }) => {
                onCameraChanged={ (ev: MapCameraChangedEvent) =>
                console.log('camera changed:', ev.detail.center, 'zoom:', ev.detail.zoom)
                }
-               onClick = {(e: MapMouseEvent) => {
-                const  latitude = e.detail.latLng.lat;
-                const longitude = e.detail.latLng.lng;
-                
-                setCoordinates(new GeoPoint(latitude, longitude));
-                }}>
+               onClick={(e: MapMouseEvent) => {
+                if (e.detail.latLng) {
+                  const latitude = e.detail.latLng.lat;
+                  const longitude = e.detail.latLng.lng;
+                  setCoordinates(new GeoPoint(latitude, longitude));
+                } else {
+                  console.warn('No latLng data available on click event.');
+                }
+              }}>
                
                 {coordinates && (
                   <Marker
