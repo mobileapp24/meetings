@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import { View, StyleSheet, SafeAreaView } from 'react-native';
 import MeetupMyMeetings from '../components/MeetupListMyMeetings'; // Component for displaying meetups
 import { Meetup } from '../types/meetup';
 import { useNavigation } from '@react-navigation/native';
@@ -20,10 +20,8 @@ const MyMeetingsV2: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-        <ScrollView>
         {/* Displaying active and finished meetups */}
         <MeetupMyMeetings onMeetupPress={handleMeetupPress} />
-        </ScrollView>
     </SafeAreaView>
   );
 };
