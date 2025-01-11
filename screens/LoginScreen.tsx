@@ -3,9 +3,21 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'reac
 import { signInWithEmailAndPassword } from 'firebase/auth'; // Handle email-password authentication
 import { auth } from '../services/config'; // Firebase configuration
 import CustomAlert from '../components/CustomAlert'; // Display messages to the user
+import { StackNavigationProp } from '@react-navigation/stack';
 
+type RootStackParamList = {
+  Login: undefined;
+  MainApp: undefined;
+  Register: undefined;
+};
 
-const LoginScreen = ({ navigation }) => {
+type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
+
+type Props = {
+  navigation: LoginScreenNavigationProp;
+};
+
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   // States for storing user's inputs (email and password)
   const [email, setEmail] = useState(''); 
@@ -89,7 +101,7 @@ const LoginScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.linkText}>Don't have an account? Register</Text>
+        <Text style={styles.linkText}>Don&apos;t have an account? Register</Text>
       </TouchableOpacity>
       <CustomAlert
         // Show the alert if 'true', and pass its information (title and message)

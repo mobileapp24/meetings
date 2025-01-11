@@ -2,11 +2,10 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
 import { collection, addDoc, updateDoc, doc, arrayUnion, GeoPoint } from 'firebase/firestore'; // Utilities for database interaction
 import { db, auth } from '../services/config'; // Firebase configuration and authentication services
-import DateTimePicker from '@react-native-community/datetimepicker'; // Cross-platform date/time picker
+import DateTimePicker, {DateTimePickerEvent} from '@react-native-community/datetimepicker'; // Cross-platform date/time picker
 import { Picker } from '@react-native-picker/picker'; // Cross-platform dropdown picker for categories
 import CustomAlert from './CustomAlert'; // Custom reusable alert component
 import {APIProvider, Map, MapCameraChangedEvent, MapMouseEvent, Marker  } from '@vis.gl/react-google-maps'; // Map utilities for the web 
-import { useNavigation } from '@react-navigation/native';
 
 // Predefined categories for meetups
 const categories = ['Sports', 'Study', 'Social', 'Work', 'Other'];
@@ -17,7 +16,6 @@ interface CreateMeetupFormProps {
 
 const CreateMeetupForm: React.FC<CreateMeetupFormProps> = ({ onClose }) => {
   // State variables for the form fields and the UI behavior
-  const navigation = useNavigation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
@@ -124,15 +122,15 @@ const CreateMeetupForm: React.FC<CreateMeetupFormProps> = ({ onClose }) => {
   };
 
   // Handles the date selection for date picker
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    const currentDate = selectedDate || date;
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
-    setDate(currentDate);
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
   };
 
   // Handles the time selection for time picker
-  const onTimeChange = (event: any, selectedTime?: Date) => {
-    const currentDate = selectedTime || date;
+  const onTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
     setShowTimePicker(Platform.OS === 'ios');
     if (selectedTime) {
       setDate(new Date(
@@ -210,7 +208,7 @@ const CreateMeetupForm: React.FC<CreateMeetupFormProps> = ({ onClose }) => {
       return (
         <Picker
           selectedValue={category}
-          onValueChange={(itemValue) => setCategory(itemValue)}
+          onValueChange={(itemValue: string) => setCategory(itemValue)}
           style={styles.picker}
         >
           {categories.map((cat) => (
@@ -235,12 +233,15 @@ const CreateMeetupForm: React.FC<CreateMeetupFormProps> = ({ onClose }) => {
                onCameraChanged={ (ev: MapCameraChangedEvent) =>
                console.log('camera changed:', ev.detail.center, 'zoom:', ev.detail.zoom)
                }
-               onClick = {(e: MapMouseEvent) => {
-                const  latitude = e.detail.latLng.lat;
-                const longitude = e.detail.latLng.lng;
-                
-                setCoordinates(new GeoPoint(latitude, longitude));
-                }}>
+               onClick={(e: MapMouseEvent) => {
+                if (e.detail.latLng) {
+                  const latitude = e.detail.latLng.lat;
+                  const longitude = e.detail.latLng.lng;
+                  setCoordinates(new GeoPoint(latitude, longitude));
+                } else {
+                  console.warn('No latLng data available on click event.');
+                }
+              }}>
                
                 {coordinates && (
                   <Marker
@@ -253,12 +254,7 @@ const CreateMeetupForm: React.FC<CreateMeetupFormProps> = ({ onClose }) => {
       );
     } else {
       // Render the map for selecting location for mobile platforms
-      let MapView: any;
-      let Marker: any;
-  
-      const Maps = require('react-native-maps');
-      MapView = Maps.default;
-      Marker = Maps.Marker;
+      const { default: MapView, Marker } = require('react-native-maps');
 
       return (
         <View style={styles.mapContainer}>
@@ -272,7 +268,7 @@ const CreateMeetupForm: React.FC<CreateMeetupFormProps> = ({ onClose }) => {
               latitudeDelta: 0.0922,
               longitudeDelta: 0.0421,
             }}
-            onPress ={(e: { nativeEvent: { coordinate: { latitude: any; longitude: any; }; }; }) => {
+            onPress={(e: { nativeEvent: { coordinate: { latitude: number; longitude: number } } }) => {
               const { latitude, longitude } = e.nativeEvent.coordinate;
               setCoordinates(new GeoPoint(latitude, longitude));
             }}
@@ -415,14 +411,6 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
-  },
-  webMapContainer: {
-    width: '100%',
-    height: 200,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
   },
   coordinatesText: {
     marginBottom: 10,

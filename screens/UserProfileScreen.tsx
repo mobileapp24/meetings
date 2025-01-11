@@ -13,7 +13,12 @@ type UserProfileScreenProps = {
 };
 
 const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
-  const [profile, setProfile] = useState<any>(null);  // State for storing the user's profile data, initially null
+  const [profile, setProfile] = useState<{ // State for storing the user's profile data, initially null
+    name: string;
+    email: string;
+    rating?: number;
+    interests?: string[];
+  } | null>(null);  
   const [loading, setLoading] = useState(true); // State to track whether the data is still loading
   const [error, setError] = useState<string | null>(null); // State for storing error messages, initially null
 
@@ -33,7 +38,18 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
            // If fetching a profile other than the current user's
           const userDoc = await getDoc(doc(db, 'users', userId)); // Retrieve the document from the Firestore database
           if (userDoc.exists()) {
-            setProfile(userDoc.data()); // Set profile data if the document exists
+            const data = userDoc.data();
+            // Ensure data has the expected structure
+            if (typeof data.name === 'string' && typeof data.email === 'string') {
+              setProfile({
+                name: data.name,
+                email: data.email,
+                rating: typeof data.rating === 'number' ? data.rating : undefined,
+                interests: Array.isArray(data.interests) ? data.interests : [],
+              });
+            } else {
+              setError('Invalid user data format');
+            }
           } else {
             setError('User not found');
           }

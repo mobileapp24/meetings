@@ -5,14 +5,11 @@ import { db } from '../services/config';
 import MeetupList from '../components/MeetupList';
 import CreateMeetupForm from '../components/CreateMeetupForm';
 import { Meetup } from '../types/meetup';
-import { Picker, PickerIOS } from '@react-native-picker/picker';
+import { Picker } from '@react-native-picker/picker';
 import { updateMeetupStatus } from '../utils/meetupUtils';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import AccordionSection from '../components/AccordionSection';
-
-
-
 
 // Define the navigation types
 type RootStackParamList = {
@@ -29,7 +26,6 @@ const HomeScreen: React.FC = () => {
   const [filteredFinishedMeetups, setFilteredFinishedMeetups] = useState<Meetup[]>([]); // Filtered finished meetups
   const [selectedCategory, setSelectedCategory] = useState('All'); // Current selected category for filtering
   const [showCreateForm, setShowCreateForm] = useState(false); // Toggles visibility of the create meetup form
-  const [loading, setLoading] = useState(true); // Loading state for data fetching
   const [showCategoryPicker, setShowCategoryPicker] = useState(false); // Toggles visibility of the category picker
   const { width, height } = useWindowDimensions(); // Fetch current window dimensions
   const isLandscape = width > height; // Determine if the device is in landscape orientation
@@ -37,21 +33,22 @@ const HomeScreen: React.FC = () => {
 
     // Function to fetch meetups from Firestore
   const fetchMeetups = useCallback(async () => {
-    setLoading(true);
     const q = query(
       collection(db, 'meetups'), // Access the 'meetups' collection in Firestore
       orderBy('date', 'asc') // Sort meetups by ascending date
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const meetupsData: Meetup[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data() as Meetup,
-      }));
+      const meetupsData: Meetup[] = snapshot.docs.map((doc) => {
+        const data = doc.data() as Meetup;
+        return {
+          ...data,
+          id: doc.id,
+        };
+      });
        // Separate meetups into active and finished categories
       setActiveMeetups(meetupsData.filter((meetup) => !meetup.isFinished));
       setFinishedMeetups(meetupsData.filter((meetup) => meetup.isFinished));
-      setLoading(false);
     });
     return unsubscribe;  // Return the unsubscribe function to clean up later
   }, []);
@@ -299,7 +296,3 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
-
-function elseif(arg0: boolean) {
-  throw new Error('Function not implemented.');
-}

@@ -4,8 +4,20 @@ import { updateProfile, createUserWithEmailAndPassword } from 'firebase/auth'; /
 import { setDoc, doc } from 'firebase/firestore'; // Functions to create and write documents
 import { auth, db } from '../services/config'; // Firebase configuration
 import CustomAlert from '../components/CustomAlert'; // Display messages to the user
+import { StackNavigationProp } from '@react-navigation/stack';
 
-const RegisterScreen = ({ navigation }) => {
+type RootStackParamList = {
+  Register: undefined;
+  Login: undefined;
+};
+
+type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
+
+type Props = {
+  navigation: RegisterScreenNavigationProp;
+};
+
+const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
   // States for storing user's inputs (email, password and name)
   const [email, setEmail] = useState('');
@@ -36,9 +48,11 @@ const RegisterScreen = ({ navigation }) => {
       console.log('Attempting to create user...');
       // Create a user with email and password using Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      updateProfile(auth.currentUser, {
-        displayName: name
-      })
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, {
+          displayName: name,
+        });
+      }
       const user = userCredential.user; // Reference to the created user
       console.log('User created successfully:', user.uid);
 

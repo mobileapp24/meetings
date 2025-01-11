@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, SafeAreaView } from 'react-native';
+import { StyleSheet, SafeAreaView } from 'react-native';
 import MeetupMyMeetings from '../components/MeetupListMyMeetings'; // Component for displaying meetups
 import { Meetup } from '../types/meetup';
 import { useNavigation } from '@react-navigation/native';

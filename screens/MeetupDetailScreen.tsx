@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { doc, getDoc, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
@@ -33,7 +33,11 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
 
   const currentUser = auth.currentUser;   // Retrieve the currently authenticated user
   const isUserInMeetup = currentUser && meetup?.participants.includes(currentUser.uid);
-  const isMeetupFull = meetup?.participants?.length >= meetup?.maxParticipants || false;
+  const isMeetupFull = meetup?.participants?.length !== undefined && meetup?.maxParticipants !== undefined
+    ? meetup.participants.length >= meetup.maxParticipants
+    : false;
+
+
 
 
   useEffect(() => {  // Effect to fetch meetup details when the component mounts or meetupId changes
@@ -127,6 +131,7 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
   }
 
   return (
+    <SafeAreaView style={styles.safeArea}>
     <ScrollView style={styles.container}>
       <Text style={styles.title}>{meetup.title}</Text>
       <Text style={styles.detail}>Category: {meetup.category}</Text>
@@ -167,21 +172,29 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
           <Text>{participant.name}</Text>
         </TouchableOpacity>
       ))}
+      </ScrollView>
       <CustomAlert
         visible={alertVisible}
         title={alertTitle}
         message={alertMessage}
         onConfirm={() => setAlertVisible(false)}
       />
-    </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
+  },
+  contentContainer: {
+    padding: 20,
+    paddingBottom: 40, // Add extra padding at the bottom
   },
   centerContainer: {
     flex: 1,
