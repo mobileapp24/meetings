@@ -6,6 +6,7 @@ import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, arrayR
 import RateMeetupModal from './RateMeetupModal';
 import AccordionSection from './AccordionSection';
 import CustomAlert from './CustomAlert';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Properties for the component
 interface MeetupMyMeetingsProps {
@@ -204,60 +205,70 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress }) => 
     const userRating = user && meetup.ratings ? meetup.ratings[user.uid] : null; // user's meetup rating
 
     return (
-      <View style={styles.meetupItem}>
-        <TouchableOpacity onPress={() => onMeetupPress(meetup)}>
-          {/* Display meetup's basic information */}
-          <Text style={styles.meetupTitle}>{meetup.title}</Text>
-          <Text style={styles.meetupDetails}>Date: {meetupDate.toLocaleString()}</Text>
-          <Text style={styles.meetupDetails}>Location: {meetup.address}</Text>
-          <Text style={styles.meetupDetails}>
-           Participants: {meetup.participants ? meetup.participants.length : 0}/{meetup.maxParticipants}
-          </Text>
-          <Text style={styles.meetupDetails}>Created by: {meetup.creatorName}</Text>
-          {/* In the case of finished meetups, show also the average rating and the user's rating */}
-          {(sectionType === 'past'|| sectionType === 'created') && meetup.isFinished == true &&(
-                    <Text style={styles.meetupRating}>
-                      Average Rating: {meetup.averageRating ? meetup.averageRating.toFixed(1) : 'Not rated'}
-                    </Text>
-                  )}
-          {  (sectionType === 'past'|| sectionType === 'created') && isUserInMeetup && userRating !== null &&  userRating !== 0 && meetup.isFinished == true && (
-                    <Text style={styles.userRating}>Your Rating: {userRating}</Text>
-                  )}
-        </TouchableOpacity>
+      
+        <TouchableOpacity style={styles.meetupItem} onPress={() => onMeetupPress(meetup)}>
+            {/* Display meetup's basic information */}
+            <View style={styles.meetupInfo}>
+            <Text style={styles.meetupTitle}>{meetup.title}</Text>
+            <Text style={styles.meetupDetails}>Date: {meetupDate.toLocaleString()}</Text>
+            <Text style={styles.meetupDetails}>Location: {meetup.address}</Text>
+            <Text style={styles.meetupDetails}>
+            Participants: {meetup.participants ? meetup.participants.length : 0}/{meetup.maxParticipants}
+            </Text>
+            <Text style={styles.meetupDetails}>Created by: {meetup.creatorName}</Text>
+            {/* In the case of finished meetups, show also the average rating and the user's rating */}
+            {(sectionType === 'past'|| sectionType === 'created') && meetup.isFinished == true &&(
+                      <Text style={styles.meetupRating}>
+                        Average Rating: {meetup.averageRating ? meetup.averageRating.toFixed(1) : 'Not rated'}
+                      </Text>
+                    )}
+            {  (sectionType === 'past'|| sectionType === 'created') && isUserInMeetup && userRating !== null &&  userRating !== 0 && meetup.isFinished == true && (
+                      <Text style={styles.userRating}>Your Rating: {userRating}</Text>
+                    )}
+          </View>
+       
+        
         {/* For the active meetups, if there is still space, show also the option to join 
         or to leave (if previously joined) */}
         {sectionType === 'upcoming' && (
+          <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, isUserInMeetup ? styles.leaveButton : styles.joinButton]}
             onPress={() => handleJoinLeaveMeetup(meetup)}
           >
             <Text style={styles.buttonText}>{isUserInMeetup ? 'Leave' : 'Join'}</Text>
           </TouchableOpacity>
+          </View>
         )}
         {/* Rating button for past meetups where the participant user has not rate it yet */}
         {sectionType === 'past' && canRate && (
+          <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, styles.rateButton]}
             onPress={() => handleRateMeetup(meetup)}
           >
             <Text style={styles.buttonText}>Rate</Text>
           </TouchableOpacity>
+          </View>
         )}
         {/* Delete button for user's created meetups */}
         {sectionType === 'created' && (
+          <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, styles.deleteButton]}
             onPress={() => handleDeleteMeetup(meetup.id)}
           >
             <Text style={styles.buttonText}>Delete</Text>
           </TouchableOpacity>
+          </View>
         )}
-      </View>
+         </TouchableOpacity>
+      
     );
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Display the upcoming meetups section */}
       <AccordionSection title="Upcoming Meetups">
       <FlatList
@@ -304,12 +315,17 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress }) => 
         message={alertMessage}
         onConfirm={() => setAlertVisible(false)}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 
 const styles = StyleSheet.create({
+  
+  buttonContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+  },
   container: {
     flex: 1,
     padding: 16,
@@ -329,6 +345,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
+  meetupInfo: {
+    flex: 1,
+  },
   meetupTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -338,13 +357,13 @@ const styles = StyleSheet.create({
   meetupDetails: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 2,
+    marginTop: 5,
   },
   button: {
     padding: 10,
     borderRadius: 5,
-    minWidth: 70,
-    alignItems: 'center',
+    marginTop: 10,
+   
   },
   joinButton: {
     backgroundColor: '#4CAF50',
