@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
 import { Meetup } from '../types/meetup';
 import { auth, db } from '../services/config'; // Firebase authentication and database services
 import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, arrayRemove, arrayUnion, getDoc } from 'firebase/firestore'; // Firebase Firestore utilities

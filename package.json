@@ -8,7 +8,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "postinstall": "node react-native-map-web-fix.js"
+    "postinstall": "node react-native-map-web-fix.js",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@expo/metro-runtime": "~4.0.0",
@@ -38,10 +39,15 @@
     "react-native-web": "~0.19.13"
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
     "@react-native-community/cli": "^15.1.3",
     "@types/react": "~18.3.12",
+    "eslint": "^9.18.0",
+    "eslint-plugin-react": "^7.37.3",
+    "globals": "^15.14.0",
     "react-native-dotenv": "^3.4.11",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.19.1"
   },
   "private": true
 }
