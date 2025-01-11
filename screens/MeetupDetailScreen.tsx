@@ -7,11 +7,13 @@ import { db, auth } from '../services/config';
 import { Meetup } from '../types/meetup';
 import CustomAlert from '../components/CustomAlert';
 
+// Define the navigation routes and their parameters
 type RootStackParamList = {
   Profile: undefined;
   UserProfile: { userId: string };
 };
 
+// Define the props for the MeetupDetailScreen, including route parameters
 type MeetupDetailScreenProps = {
   route: {
     params: {
@@ -21,21 +23,21 @@ type MeetupDetailScreenProps = {
 };
 
 const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
-  const [meetup, setMeetup] = useState<Meetup | null>(null);
-  const [participants, setParticipants] = useState<{ id: string; name: string }[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const [alertVisible, setAlertVisible] = useState(false);
+  const [meetup, setMeetup] = useState<Meetup | null>(null); // State for storing meetup details, initially null
+  const [participants, setParticipants] = useState<{ id: string; name: string }[]>([]);  // State for storing the list of participants
+  const [loading, setLoading] = useState(true);  // State for tracking whether data is loading
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();  // Typed navigation object for navigating to other screens
+  const [alertVisible, setAlertVisible] = useState(false); // State for controlling the visibility of the custom alert
   const [alertTitle, setAlertTitle] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');  // States for setting the title and message of the alert
 
-  const currentUser = auth.currentUser;
+  const currentUser = auth.currentUser;   // Retrieve the currently authenticated user
   const isUserInMeetup = currentUser && meetup?.participants.includes(currentUser.uid);
   const isMeetupFull = meetup?.participants?.length >= meetup?.maxParticipants || false;
 
 
-  useEffect(() => {
-    const fetchMeetupDetails = async () => {
+  useEffect(() => {  // Effect to fetch meetup details when the component mounts or meetupId changes
+    const fetchMeetupDetails = async () => { // Function to fetch details of a specific meetup
       try {
         const meetupDoc = await getDoc(doc(db, 'meetups', route.params.meetupId));
         if (meetupDoc.exists()) {
@@ -60,6 +62,7 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
     fetchMeetupDetails();
   }, [route.params.meetupId]);
 
+  // Navigate to the appropriate profile screen based on the user ID
   const handleParticipantPress = (userId: string) => {
     const currentUser = auth.currentUser;
     if (currentUser && userId === currentUser.uid) {
@@ -69,12 +72,14 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
     }
   };
 
+   // Helper function to display a custom alert
   const showAlert = (title: string, message: string) => {
     setAlertTitle(title);
     setAlertMessage(message);
     setAlertVisible(true);
   };
 
+   // Function to handle joining or leaving a meetup
   const handleJoinLeaveMeetup = async () => {
     const user = auth.currentUser;
     if (!user || !meetup) return;
@@ -83,13 +88,13 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
     const meetupRef = doc(db, 'meetups', meetup.id);
 
     try {
-      if (meetup.participants.includes(user.uid)) {
+      if (meetup.participants.includes(user.uid)) {// If the user is already part of the meetup, remove them
         await updateDoc(meetupRef, { participants: arrayRemove(user.uid) });
         await updateDoc(userRef, { eventsAttended: arrayRemove(meetup.id) });
         setMeetup({ ...meetup, participants: meetup.participants.filter(id => id !== user.uid) });
         setParticipants(participants.filter(p => p.id !== user.uid));
         showAlert('Success', 'Left meetup successfully');
-      } else if (meetup.participants.length < meetup.maxParticipants) {
+      } else if (meetup.participants.length < meetup.maxParticipants) { // If there's space in the meetup, add the user
         await updateDoc(meetupRef, { participants: arrayUnion(user.uid) });
         await updateDoc(userRef, { eventsAttended: arrayUnion(meetup.id) });
         setMeetup({ ...meetup, participants: [...meetup.participants, user.uid] });
@@ -97,7 +102,7 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
         setParticipants([...participants, { id: user.uid, name: userDoc.data()?.name || 'Unknown User' }]);
         showAlert('Success', 'Joined meetup successfully');
       } else {
-        showAlert('Info', 'Meetup is full');
+        showAlert('Info', 'Meetup is full'); // Show alert if the meetup is full
       }
     } catch (error) {
       console.error('Error updating meetup participation:', error);
@@ -105,7 +110,7 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
     }
   };
 
-  if (loading) {
+  if (loading) {  // Render a loading spinner while fetching data
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
@@ -113,7 +118,7 @@ const MeetupDetailScreen: React.FC<MeetupDetailScreenProps> = ({ route }) => {
     );
   }
 
-  if (!meetup) {
+  if (!meetup) { // Render a fallback message if no meetup data is found
     return (
       <View style={styles.centerContainer}>
         <Text>Meetup not found</Text>

@@ -14,7 +14,7 @@ interface AccordionSectionProps {
 
 // Component that renders a section with expandable content
 const AccordionSection: React.FC<AccordionSectionProps> = ({ title, children }) => {
-  const [isExpanded, setIsExpanded] = useState(false); // State that determunes whether the content is visible
+  const [isExpanded, setIsExpanded] = useState(false); // State that determines whether the content is visible
 
   // Function to change the expansion state
   const toggleExpand = () => {
