@@ -267,48 +267,33 @@ const MeetupMyMeetings: React.FC<MeetupMyMeetingsProps> = ({onMeetupPress }) => 
     );
   };
 
+  const renderSection = useCallback(({ title, data, sectionType }: { title: string, data: Meetup[], sectionType: 'upcoming' | 'past' | 'created' }) => (
+    <AccordionSection title={`${title} (${data.length})`}>
+      <FlatList
+        data={data}
+        renderItem={({ item }) => renderMeetupItem(item, sectionType)}
+        keyExtractor={(item) => item.id}
+        ListEmptyComponent={<Text style={styles.emptyText}>No {title.toLowerCase()}</Text>}
+      />
+    </AccordionSection>
+  ), [renderMeetupItem]);
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Display the upcoming meetups section */}
-      <AccordionSection title="Upcoming Meetups">
       <FlatList
-        data={upcomingMeetups}
-        renderItem={({ item }) => renderMeetupItem(item, 'upcoming')}
-        keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Text style={styles.emptyText}>No upcoming meetups</Text>}
-        
+        data={[
+          { title: 'Upcoming Meetups', data: upcomingMeetups, sectionType: 'upcoming' as const },
+          { title: 'Past Meetups', data: pastMeetups, sectionType: 'past' as const },
+          { title: 'Created Meetups', data: createdMeetups, sectionType: 'created' as const },
+        ]}
+        renderItem={({ item }) => renderSection(item)}
+        keyExtractor={(item) => item.title}
       />
-       </AccordionSection>
-
-      {/* Display the past meetups section */}
-       <AccordionSection title="Past Meetups">
-      <FlatList
-        data={pastMeetups}
-        renderItem={({ item }) => renderMeetupItem(item, 'past')}
-        keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Text style={styles.emptyText}>No past meetups</Text>}
-       
-      />
-       </AccordionSection>
-
-      {/* Display the created meetups section */}
-       <AccordionSection title="Created Meetups">
-      <FlatList
-        data={createdMeetups}
-        renderItem={({ item }) => renderMeetupItem(item, 'created')}
-        keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Text style={styles.emptyText}>No created meetups</Text>}
-     
-      />
-      </AccordionSection>
-
-      {/* Display the rating modal when necessary */}
       <RateMeetupModal
         visible={isRatingModalVisible}
         onClose={() => setIsRatingModalVisible(false)}
         onSubmit={handleRatingSubmit}
       />
-
       <CustomAlert
         visible={alertVisible}
         title={alertTitle}

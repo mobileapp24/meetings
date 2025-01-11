@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Button, Text, Platform, ScrollView, SafeAreaView } from 'react-native';
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { View, StyleSheet, Button, Text, Platform, SafeAreaView } from 'react-native';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/config';
 import MeetupList from '../components/MeetupList';
 import CreateMeetupForm from '../components/CreateMeetupForm';
@@ -104,11 +104,9 @@ const HomeScreen: React.FC = () => {
         {showCreateForm ? (
           <CreateMeetupForm/>
         ) : (
-          <ScrollView style={styles.scrollView}>
+          <>
             <Text style={styles.filterLabel}>Filter by Category:</Text>
             {renderCategoryPicker()}
-
-            
 
             <AccordionSection title="Active Meetups">
             <MeetupList
@@ -118,7 +116,6 @@ const HomeScreen: React.FC = () => {
             />
             </AccordionSection>
 
-            
             <AccordionSection title="Finished Meetups">
             <MeetupList
               meetups={filteredFinishedMeetups}
@@ -126,8 +123,7 @@ const HomeScreen: React.FC = () => {
               isFinishedList={true}
             />
             </AccordionSection>
-            
-          </ScrollView>
+          </>
         )}
 
         <View style={styles.buttonContainer}>
