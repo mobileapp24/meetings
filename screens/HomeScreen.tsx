@@ -14,31 +14,33 @@ import AccordionSection from '../components/AccordionSection';
 
 
 
-
+// Define the navigation types
 type RootStackParamList = {
-  MeetupDetail: { meetupId: string };
+  MeetupDetail: { meetupId: string }; // Navigation parameter for detailed meetup view
 };
 
+// Categories for filtering meetups
 const categories = ['All', 'Sports', 'Study', 'Social', 'Work', 'Other'];
 
 const HomeScreen: React.FC = () => {
-  const [activeMeetups, setActiveMeetups] = useState<Meetup[]>([]);
-  const [finishedMeetups, setFinishedMeetups] = useState<Meetup[]>([]);
-  const [filteredActiveMeetups, setFilteredActiveMeetups] = useState<Meetup[]>([]);
-  const [filteredFinishedMeetups, setFilteredFinishedMeetups] = useState<Meetup[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-  const { width, height } = useWindowDimensions();
-  const isLandscape = width > height;
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const [activeMeetups, setActiveMeetups] = useState<Meetup[]>([]);// Active meetups
+  const [finishedMeetups, setFinishedMeetups] = useState<Meetup[]>([]); // Finished meetups
+  const [filteredActiveMeetups, setFilteredActiveMeetups] = useState<Meetup[]>([]); // Filtered active meetups
+  const [filteredFinishedMeetups, setFilteredFinishedMeetups] = useState<Meetup[]>([]); // Filtered finished meetups
+  const [selectedCategory, setSelectedCategory] = useState('All'); // Current selected category for filtering
+  const [showCreateForm, setShowCreateForm] = useState(false); // Toggles visibility of the create meetup form
+  const [loading, setLoading] = useState(true); // Loading state for data fetching
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false); // Toggles visibility of the category picker
+  const { width, height } = useWindowDimensions(); // Fetch current window dimensions
+  const isLandscape = width > height; // Determine if the device is in landscape orientation
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>(); // Access navigation instance
 
+    // Function to fetch meetups from Firestore
   const fetchMeetups = useCallback(async () => {
     setLoading(true);
     const q = query(
-      collection(db, 'meetups'),
-      orderBy('date', 'asc')
+      collection(db, 'meetups'), // Access the 'meetups' collection in Firestore
+      orderBy('date', 'asc') // Sort meetups by ascending date
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -46,17 +48,19 @@ const HomeScreen: React.FC = () => {
         id: doc.id,
         ...doc.data() as Meetup,
       }));
+       // Separate meetups into active and finished categories
       setActiveMeetups(meetupsData.filter((meetup) => !meetup.isFinished));
       setFinishedMeetups(meetupsData.filter((meetup) => meetup.isFinished));
       setLoading(false);
     });
-    return unsubscribe;
+    return unsubscribe;  // Return the unsubscribe function to clean up later
   }, []);
 
+  // Update filtered meetups whenever state or selectedCategory changes
   useEffect(() => {
     const filteredActive = selectedCategory === 'All'
-      ? activeMeetups
-      : activeMeetups.filter((meetup) => meetup.category === selectedCategory);
+      ? activeMeetups // Show all active meetups if "All" is selected
+      : activeMeetups.filter((meetup) => meetup.category === selectedCategory); // Filter by category
     const filteredFinished = selectedCategory === 'All'
       ? finishedMeetups
       : finishedMeetups.filter((meetup) => meetup.category === selectedCategory);
@@ -66,18 +70,21 @@ const HomeScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      updateMeetupStatus().then(() => {
-        fetchMeetups();
+      updateMeetupStatus().then(() => {  // Update the status of meetups
+        fetchMeetups(); // Fetch updated data
       });
     }, [fetchMeetups])
   );
 
+  // Navigate to the meetup detail screen when a meetup is pressed
   const handleMeetupPress = (meetup: Meetup) => {
     navigation.navigate('MeetupDetail', { meetupId: meetup.id });
   };
 
+   // Render the category picker, adapting to platform-specific requirements
   const renderCategoryPicker = () => {
     if (Platform.OS === 'web') {
+      // For web, use a standard <select> element
       return (
         <select
           value={selectedCategory}
@@ -90,7 +97,7 @@ const HomeScreen: React.FC = () => {
         </select>
       );
     }else if(Platform.OS === 'ios'){
-      
+      // For iOS, use a modal-based picker
       return (
         <View>
           <TouchableOpacity style={styles.categoryButton} onPress={() => setShowCategoryPicker(true)}>
@@ -134,6 +141,7 @@ const HomeScreen: React.FC = () => {
 
     }else {
       return (
+        // For Android, use a standard picker
         <Picker
           selectedValue={selectedCategory}
           onValueChange={(itemValue) => setSelectedCategory(itemValue)}
@@ -147,16 +155,18 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  // Render an accordion section for displaying meetups
   const renderSection = useCallback(({ item }: { item: { title: string; data: Meetup[]; isFinished: boolean } }) => (
     <AccordionSection title={`${item.title} (${item.data.length})`}>
       <MeetupList
-        meetups={item.data}
-        onMeetupPress={handleMeetupPress}
-        isFinishedList={item.isFinished}
+        meetups={item.data} // Pass the data to the MeetupList component
+        onMeetupPress={handleMeetupPress} // Handle meetup selection
+        isFinishedList={item.isFinished} // Indicate if the section is for finished meetups
       />
     </AccordionSection>
   ), [handleMeetupPress]);
 
+  // Define the sections for the accordion
   const sections = [
     { title: 'Active Meetups', data: filteredActiveMeetups, isFinished: false },
     { title: 'Finished Meetups', data: filteredFinishedMeetups, isFinished: true },
@@ -179,7 +189,7 @@ const HomeScreen: React.FC = () => {
                 <View style={styles.buttonContainer}>
                   <Button
                     title="Create New Meetup"
-                    onPress={() => setShowCreateForm(true)}
+                    onPress={() => setShowCreateForm(true)} // Open the create meetup form
                   />
                 </View>
               }
